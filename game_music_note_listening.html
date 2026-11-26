@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>音樂聽力測試遊戲</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 760px;
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* 控制列 */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    select {
+      background-color: #0f172a;
+      color: var(--text-main);
+      border: 1px solid #334155;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    button {
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s, opacity 0.2s;
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: #0f172a;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #7dd3fc;
+    }
+
+    .btn-secondary {
+      background-color: #334155;
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background-color: #475569;
+    }
+
+    /* 狀態與進度面板 */
+    .status-box {
+      background-color: #0f172a;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 24px;
+      border: 1px solid #334155;
+    }
+
+    .status-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      min-height: 1.5em;
+    }
+
+    .progress-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      min-height: 16px;
+      flex-wrap: wrap;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: #334155;
+      transition: background-color 0.2s, transform 0.2s;
+    }
+
+    .dot.playing {
+      background-color: var(--warning);
+      transform: scale(1.25);
+      box-shadow: 0 0 10px var(--warning);
+    }
+
+    .dot.filled {
+      background-color: var(--accent);
+    }
+
+    .dot.correct {
+      background-color: var(--success);
+    }
+
+    .dot.wrong {
+      background-color: var(--error);
+    }
+
+    /* 鋼琴鍵盤區 */
+    .piano-wrapper {
+      position: relative;
+      width: 100%;
+      height: 210px;
+      margin-bottom: 20px;
+      background-color: #020617;
+      padding: 10px 8px 12px;
+      border-radius: 12px;
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .piano-wrapper.locked {
+      pointer-events: none;
+      opacity: 0.75;
+    }
+
+    .white-keys {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      gap: 4px;
+    }
+
+    .key {
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 10px;
+      transition: background-color 0.08s, transform 0.08s;
+      touch-action: manipulation;
+    }
+
+    .white-key {
+      flex: 1;
+      height: 100%;
+      background: linear-gradient(to bottom, #ffffff 0%, #e2e8f0 100%);
+      color: #334155;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 0 #94a3b8;
+    }
+
+    .white-key.active {
+      background: linear-gradient(to bottom, #bae6fd 0%, #7dd3fc 100%);
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #94a3b8;
+    }
+
+    .black-key {
+      position: absolute;
+      top: 10px;
+      width: 7.5%;
+      height: 58%;
+      background: linear-gradient(to bottom, #334155 0%, #0f172a 100%);
+      color: #cbd5e1;
+      border-radius: 0 0 6px 6px;
+      z-index: 2;
+      transform: translateX(-50%);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+      border: 1px solid #475569;
+    }
+
+    .black-key.active {
+      background: linear-gradient(to bottom, #0284c7 0%, #0369a1 100%);
+      transform: translateX(-50%) translateY(3px);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+
+    .note-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .kbd-hint {
+      font-size: 0.7rem;
+      opacity: 0.65;
+      margin-top: 2px;
+    }
+
+    /* 結果面板 */
+    .result-panel {
+      display: none;
+      background-color: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-panel.show {
+      display: block;
+    }
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .score-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .score-grade {
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background-color: #1e293b;
+    }
+
+    .comparison-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .note-compare {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background-color: #1e293b;
+      font-size: 0.85rem;
+      min-width: 62px;
+      border: 1px solid transparent;
+    }
+
+    .note-compare.is-correct {
+      border-color: rgba(34, 197, 94, 0.5);
+      background-color: rgba(34, 197, 94, 0.1);
+    }
+
+    .note-compare.is-wrong {
+      border-color: rgba(239, 68, 68, 0.5);
+      background-color: rgba(239, 68, 68, 0.1);
+    }
+
+    .note-compare .target {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .note-compare .played {
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 540px) {
+      .game-container {
+        padding: 16px;
+      }
+      .piano-wrapper {
+        height: 170px;
+      }
+      .kbd-hint {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <header>
+      <h1>🎵 音樂聽力測試</h1>
+      <p>仔細聆聽播放的旋律，再用鋼琴鍵盤彈奏出來！</p>
+    </header>
+
+    <div class="controls">
+      <select id="songSelect" aria-label="選擇題目">
+        <option value="twinkle">小星星 (7音)</option>
+        <option value="mary">瑪莉有隻小綿羊 (7音)</option>
+        <option value="tiger">兩隻老虎 (8音)</option>
+        <option value="ode">歡樂頌 (9音)</option>
+        <option value="randomEasy">🎲 隨機旋律 - 簡單 (5音白鍵)</option>
+        <option value="randomHard">🎲 隨機旋律 - 進階 (6音含半音)</option>
+      </select>
+      <button id="startBtn" class="btn-primary">開始遊戲</button>
+      <button id="replayBtn" class="btn-secondary" disabled>重聽題目</button>
+      <button id="restartBtn" class="btn-secondary">重新開始</button>
+    </div>
+
+    <div class="status-box">
+      <div id="statusText" class="status-text">請選擇曲目並點擊「開始遊戲」</div>
+      <div id="progressDots" class="progress-dots"></div>
+    </div>
+
+    <div id="piano" class="piano-wrapper">
+      <!-- 白鍵 -->
+      <div class="white-keys">
+        <div class="key white-key" data-note="C4"><span class="note-label">Do</span><span class="kbd-hint">A</span></div>
+        <div class="key white-key" data-note="D4"><span class="note-label">Re</span><span class="kbd-hint">S</span></div>
+        <div class="key white-key" data-note="E4"><span class="note-label">Mi</span><span class="kbd-hint">D</span></div>
+        <div class="key white-key" data-note="F4"><span class="note-label">Fa</span><span class="kbd-hint">F</span></div>
+        <div class="key white-key" data-note="G4"><span class="note-label">Sol</span><span class="kbd-hint">G</span></div>
+        <div class="key white-key" data-note="A4"><span class="note-label">La</span><span class="kbd-hint">H</span></div>
+        <div class="key white-key" data-note="B4"><span class="note-label">Si</span><span class="kbd-hint">J</span></div>
+        <div class="key white-key" data-note="C5"><span class="note-label">Do'</span><span class="kbd-hint">K</span></div>
+      </div>
+
+      <!-- 黑鍵 (依百分比對齊白鍵接縫) -->
+      <div class="key black-key" data-note="C#4" style="left: 12.5%;"><span class="note-label">C#</span><span class="kbd-hint">W</span></div>
+      <div class="key black-key" data-note="D#4" style="left: 25%;"><span class="note-label">D#</span><span class="kbd-hint">E</span></div>
+      <div class="key black-key" data-note="F#4" style="left: 50%;"><span class="note-label">F#</span><span class="kbd-hint">T</span></div>
+      <div class="key black-key" data-note="G#4" style="left: 62.5%;"><span class="note-label">G#</span><span class="kbd-hint">Y</span></div>
+      <div class="key black-key" data-note="A#4" style="left: 75%;"><span class="note-label">A#</span><span class="kbd-hint">U</span></div>
+    </div>
+
+    <div id="resultPanel" class="result-panel">
+      <div class="score-header">
+        <div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">測驗準確度</div>
+          <div id="scoreValue" class="score-value">100%</div>
+        </div>
+        <div id="scoreGrade" class="score-grade">S 級</div>
+      </div>
+      <div id="comparisonList" class="comparison-list"></div>
+      <div class="result-actions">
+        <button id="playCorrectBtn" class="btn-secondary">再聽一次正確旋律</button>
+        <button id="playAgainBtn" class="btn-primary">再玩一局</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === 音符頻率與對照表 ===
+    const NOTE_FREQS = {
+      "C4": 261.63, "C#4": 277.18, "D4": 293.66, "D#4": 311.13,
+      "E4": 329.63, "F4": 349.23, "F#4": 369.99, "G4": 392.00,
+      "G#4": 415.30, "A4": 440.00, "A#4": 466.16, "B4": 493.88,
+      "C5": 523.25
+    };
+
+    const NOTE_DISPLAY = {
+      "C4": "Do", "C#4": "C#", "D4": "Re", "D#4": "D#",
+      "E4": "Mi", "F4": "Fa", "F#4": "F#", "G4": "Sol",
+      "G#4": "G#", "A4": "La", "A#4": "A#", "B4": "Si",
+      "C5": "Do'"
+    };
+
+    const KEYBOARD_MAP = {
+      "a": "C4", "w": "C#4", "s": "D4", "e": "D#4", "d": "E4",
+      "f": "F4", "t": "F#4", "g": "G4", "y": "G#4", "h": "A4",
+      "u": "A#4", "j": "B4", "k": "C5"
+    };
+
+    const WHITE_NOTES = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
+    const ALL_NOTES = Object.keys(NOTE_FREQS);
+
+    // === 預設曲庫 ===
+    const SONGS = {
+      twinkle: {
+        name: "小星星",
+        notes: ["C4", "C4", "G4", "G4", "A4", "A4", "G4"],
+        tempoMs: 520
+      },
+      mary: {
+        name: "瑪莉有隻小綿羊",
+        notes: ["E4", "D4", "C4", "D4", "E4", "E4", "E4"],
+        tempoMs: 480
+      },
+      tiger: {
+        name: "兩隻老虎",
+        notes: ["C4", "D4", "E4", "C4", "C4", "D4", "E4", "C4"],
+        tempoMs: 450
+      },
+      ode: {
+        name: "歡樂頌",
+        notes: ["E4", "E4", "F4", "G4", "G4", "F4", "E4", "D4", "C4"],
+        tempoMs: 460
+      }
+    };
+
+    // === Web Audio API 音訊引擎 ===
+    let audioCtx = null;
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(note, duration = 0.45) {
+      ensureAudioContext();
+      const freq = NOTE_FREQS[note];
+      if (!freq) return;
+
+      const now = audioCtx.currentTime;
+
+      // 主振盪器（正弦波，音色溫暖）
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(freq, now);
+
+      // 泛音振盪器（三角波，增加琴鍵敲擊感）
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(freq * 2, now);
+
+      const gain1 = audioCtx.createGain();
+      const gain2 = audioCtx.createGain();
+
+      // ADSR 音量包絡
+      gain1.gain.setValueAtTime(0.001, now);
+      gain1.gain.exponentialRampToValueAtTime(0.35, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      gain2.gain.setValueAtTime(0.001, now);
+      gain2.gain.exponentialRampToValueAtTime(0.08, now + 0.015);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + duration * 0.6);
+
+      osc1.connect(gain1);
+      osc2.connect(gain2);
+      gain1.connect(audioCtx.destination);
+      gain2.connect(audioCtx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + duration + 0.05);
+      osc2.stop(now + duration + 0.05);
+    }
+
+    // === 遊戲狀態管理 ===
+    // 狀態：'IDLE' | 'PLAYING_DEMO' | 'PLAYER_TURN' | 'FINISHED'
+    let gameState = "IDLE";
+    let currentSong = null;
+    let playerNotes = [];
+    let scheduledTimers = [];
+
+    // DOM 元素
+    const songSelect = document.getElementById("songSelect");
+    const startBtn = document.getElementById("startBtn");
+    const replayBtn = document.getElementById("replayBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const statusText = document.getElementById("statusText");
+    const progressDots = document.getElementById("progressDots");
+    const pianoEl = document.getElementById("piano");
+    const resultPanel = document.getElementById("resultPanel");
+    const scoreValue = document.getElementById("scoreValue");
+    const scoreGrade = document.getElementById("scoreGrade");
+    const comparisonList = document.getElementById("comparisonList");
+    const playCorrectBtn = document.getElementById("playCorrectBtn");
+    const playAgainBtn = document.getElementById("playAgainBtn");
+    const keyElements = document.querySelectorAll(".key");
+
+    function clearTimers() {
+      scheduledTimers.forEach(id => clearTimeout(id));
+      scheduledTimers = [];
+    }
+
+    function generateRandomSong(length, pool) {
+      const notes = [];
+      for (let i = 0; i < length; i++) {
+        const randIndex = Math.floor(Math.random() * pool.length);
+        notes.push(pool[randIndex]);
+      }
+      return { name: "隨機旋律", notes, tempoMs: 550 };
+    }
+
+    function renderDots(total, activeIndex = -1, mode = "input") {
+      progressDots.innerHTML = "";
+      for (let i = 0; i < total; i++) {
+        const dot = document.createElement("div");
+        dot.className = "dot";
+        if (mode === "demo" && i === activeIndex) {
+          dot.classList.add("playing");
+        } else if (mode === "input" && i < playerNotes.length) {
+          dot.classList.add("filled");
+        } else if (mode === "result") {
+          const isMatch = playerNotes[i] === currentSong.notes[i];
+          dot.classList.add(isMatch ? "correct" : "wrong");
+        }
+        progressDots.appendChild(dot);
+      }
+    }
+
+    // 播放題目旋律（不顯示琴鍵亮燈以真正測試聽力）
+    function playDemoSequence(onComplete) {
+      clearTimers();
+      gameState = "PLAYING_DEMO";
+      pianoEl.classList.add("locked");
+      startBtn.disabled = true;
+      replayBtn.disabled = true;
+      songSelect.disabled = true;
+
+      const { notes, tempoMs } = currentSong;
+      statusText.textContent = `🎧 請仔細聆聽旋律（共 ${notes.length} 音）...`;
+
+      notes.forEach((note, idx) => {
+        const timer = setTimeout(() => {
+          playTone(note, tempoMs / 1000 * 0.9);
+          renderDots(notes.length, idx, "demo");
+        }, idx * tempoMs);
+        scheduledTimers.push(timer);
+      });
+
+      const endTimer = setTimeout(() => {
+        if (onComplete) onComplete();
+      }, notes.length * tempoMs + 250);
+      scheduledTimers.push(endTimer);
+    }
+
+    function startNewGame() {
+      ensureAudioContext();
+      clearTimers();
+      resultPanel.classList.remove("show");
+      playerNotes = [];
+
+      const selected = songSelect.value;
+      if (selected === "randomEasy") {
+        currentSong = generateRandomSong(5, WHITE_NOTES);
+      } else if (selected === "randomHard") {
+        currentSong = generateRandomSong(6, ALL_NOTES);
+      } else {
+        currentSong = SONGS[selected];
+      }
+
+      playDemoSequence(() => {
+        enterPlayerTurn();
+      });
+    }
+
+    function enterPlayerTurn() {
+      gameState = "PLAYER_TURN";
+      pianoEl.classList.remove("locked");
+      replayBtn.disabled = false;
+      songSelect.disabled = false;
+      startBtn.disabled = false;
+      statusText.textContent = `🎹 請開始彈奏！（進度：${playerNotes.length} / ${currentSong.notes.length}）`;
+      renderDots(currentSong.notes.length, -1, "input");
+    }
+
+    function handlePlayerNote(note) {
+      // 自由練習模式（IDLE 或 FINISHED 時也可直接點擊琴鍵試音）
+      playTone(note, 0.45);
+      highlightKey(note);
+
+      if (gameState !== "PLAYER_TURN") return;
+
+      playerNotes.push(note);
+      renderDots(currentSong.notes.length, -1, "input");
+
+      if (playerNotes.length < currentSong.notes.length) {
+        statusText.textContent = `🎹 請繼續彈奏...（進度：${playerNotes.length} / ${currentSong.notes.length}）`;
+      } else {
+        finishGame();
+      }
+    }
+
+    function finishGame() {
+      gameState = "FINISHED";
+      replayBtn.disabled = true;
+
+      const targetNotes = currentSong.notes;
+      let correctCount = 0;
+
+      comparisonList.innerHTML = "";
+      targetNotes.forEach((target, idx) => {
+        const played = playerNotes[idx];
+        const isCorrect = target === played;
+        if (isCorrect) correctCount++;
+
+        const item = document.createElement("div");
+        item.className = `note-compare ${isCorrect ? "is-correct" : "is-wrong"}`;
+        item.innerHTML = `
+          <span class="target">題目: ${NOTE_DISPLAY[target]}</span>
+          <span class="played">${isCorrect ? "✅" : "❌"} ${NOTE_DISPLAY[played]}</span>
+        `;
+        comparisonList.appendChild(item);
+      });
+
+      const accuracy = Math.round((correctCount / targetNotes.length) * 100);
+      scoreValue.textContent = `${accuracy}%`;
+
+      let gradeText = "再接再厲";
+      let gradeColor = "var(--error)";
+      if (accuracy === 100) {
+        gradeText = "S 級・完美聽力！";
+        gradeColor = "var(--success)";
+      } else if (accuracy >= 80) {
+        gradeText = "A 級・相當優秀";
+        gradeColor = "var(--accent)";
+      } else if (accuracy >= 60) {
+        gradeText = "B 級・還不錯";
+        gradeColor = "var(--warning)";
+      }
+
+      scoreGrade.textContent = gradeText;
+      scoreGrade.style.color = gradeColor;
+
+      statusText.textContent = `測驗結束！你彈對了 ${correctCount} / ${targetNotes.length} 個音符`;
+      renderDots(targetNotes.length, -1, "result");
+      resultPanel.classList.add("show");
+    }
+
+    function resetGame() {
+      clearTimers();
+      gameState = "IDLE";
+      playerNotes = [];
+      currentSong = null;
+      pianoEl.classList.remove("locked");
+      startBtn.disabled = false;
+      replayBtn.disabled = true;
+      songSelect.disabled = false;
+      resultPanel.classList.remove("show");
+      progressDots.innerHTML = "";
+      statusText.textContent = "已重置！請選擇曲目並點擊「開始遊戲」（可直接點擊琴鍵試音）";
+    }
+
+    function highlightKey(note) {
+      const keyEl = document.querySelector(`.key[data-note="${note}"]`);
+      if (!keyEl) return;
+      keyEl.classList.add("active");
+      setTimeout(() => keyEl.classList.remove("active"), 180);
+    }
+
+    // === 事件綁定 ===
+    startBtn.addEventListener("click", startNewGame);
+    playAgainBtn.addEventListener("click", startNewGame);
+    restartBtn.addEventListener("click", resetGame);
+
+    replayBtn.addEventListener("click", () => {
+      if (!currentSong) return;
+      // 重聽題目時清空目前輸入，重新作答該題
+      playerNotes = [];
+      playDemoSequence(() => {
+        enterPlayerTurn();
+      });
+    });
+
+    playCorrectBtn.addEventListener("click", () => {
+      if (!currentSong) return;
+      clearTimers();
+      playCorrectBtn.disabled = true;
+      currentSong.notes.forEach((note, idx) => {
+        const timer = setTimeout(() => {
+          playTone(note, currentSong.tempoMs / 1000 * 0.9);
+          highlightKey(note);
+        }, idx * currentSong.tempoMs);
+        scheduledTimers.push(timer);
+      });
+      const endTimer = setTimeout(() => {
+        playCorrectBtn.disabled = false;
+      }, currentSong.notes.length * currentSong.tempoMs);
+      scheduledTimers.push(endTimer);
+    });
+
+    // 滑鼠 / 觸控琴鍵事件
+    keyElements.forEach(keyEl => {
+      keyEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        const note = keyEl.dataset.note;
+        handlePlayerNote(note);
+      });
+    });
+
+    // 電腦鍵盤事件
+    window.addEventListener("keydown", (e) => {
+      if (e.repeat) return;
+      const note = KEYBOARD_MAP[e.key.toLowerCase()];
+      if (note && gameState !== "PLAYING_DEMO") {
+        handlePlayerNote(note);
+      }
+    });
+  </script>
+</body>
+</html>

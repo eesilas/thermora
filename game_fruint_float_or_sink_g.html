@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>水果浮沉大挑戰</title>
+  <style>
+    :root {
+      --bg-top: #e0f7fa;
+      --bg-bottom: #f1f8e9;
+      --primary: #0288d1;
+      --float-color: #00897b;
+      --float-bg: #e0f2f1;
+      --sink-color: #e65100;
+      --sink-bg: #fff3e0;
+      --correct: #2e7d32;
+      --wrong: #c62828;
+      --card-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      min-height: 100vh;
+      color: #263238;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      text-align: center;
+      max-width: 860px;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      color: #01579b;
+      letter-spacing: 1px;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 1rem;
+      color: #455a64;
+    }
+
+    /* 成績與狀態列 */
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 50px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      max-width: 860px;
+      width: fit-content;
+    }
+
+    .badge {
+      font-weight: bold;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.98rem;
+    }
+
+    .badge-progress {
+      background: #e1f5fe;
+      color: #0277bd;
+    }
+
+    .badge-correct {
+      background: #e8f5e9;
+      color: var(--correct);
+      display: none;
+    }
+
+    .badge-wrong {
+      background: #ffebee;
+      color: var(--wrong);
+      display: none;
+    }
+
+    .status-bar.finished .badge-correct,
+    .status-bar.finished .badge-wrong {
+      display: inline-block;
+    }
+
+    /* 水果選擇區 */
+    .fruit-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(135px, 1fr));
+      gap: 12px;
+      max-width: 860px;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 680px) {
+      .fruit-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .fruit-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fruit-card:hover:not(.locked) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+    }
+
+    .fruit-card.guess-float {
+      border-color: var(--float-color);
+      background: var(--float-bg);
+    }
+
+    .fruit-card.guess-sink {
+      border-color: var(--sink-color);
+      background: var(--sink-bg);
+    }
+
+    .fruit-card.locked {
+      cursor: default;
+    }
+
+    .fruit-emoji {
+      font-size: 2.6rem;
+      line-height: 1.1;
+      transition: transform 0.2s ease;
+    }
+
+    .fruit-card:hover:not(.locked) .fruit-emoji {
+      transform: scale(1.1);
+    }
+
+    .fruit-name {
+      font-size: 1.05rem;
+      font-weight: bold;
+      color: #37474f;
+    }
+
+    .choice-buttons {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .choice-btn {
+      flex: 1;
+      padding: 5px 0;
+      border: 1.5px solid #cfd8dc;
+      border-radius: 8px;
+      background: #ffffff;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: #546e7a;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .choice-btn.btn-float.active {
+      background: var(--float-color);
+      border-color: var(--float-color);
+      color: #fff;
+    }
+
+    .choice-btn.btn-sink.active {
+      background: var(--sink-color);
+      border-color: var(--sink-color);
+      color: #fff;
+    }
+
+    .fruit-card.locked .choice-btn {
+      cursor: default;
+    }
+
+    /* 卡片上的對錯標記 */
+    .result-tag {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: none;
+    }
+
+    .result-tag.show {
+      display: inline-block;
+    }
+
+    .result-tag.correct {
+      background: #c8e6c9;
+      color: var(--correct);
+    }
+
+    .result-tag.wrong {
+      background: #ffcdd2;
+      color: var(--wrong);
+    }
+
+    /* 控制按鈕區 */
+    .controls {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .action-btn {
+      padding: 12px 26px;
+      font-size: 1.08rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn-test {
+      background: linear-gradient(135deg, #0288d1, #00acc1);
+      color: white;
+    }
+
+    .btn-test:disabled {
+      background: #b0bec5;
+      cursor: not-allowed;
+      box-shadow: none;
+      opacity: 0.8;
+    }
+
+    .btn-restart {
+      background: linear-gradient(135deg, #ff8f00, #ffb300);
+      color: white;
+    }
+
+    /* 水缸區域 */
+    .tank-wrapper {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .tank {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.45) 28%, rgba(255, 255, 255, 0.3) 100%);
+      border: 6px solid #78909c;
+      border-top: none;
+      border-radius: 0 0 24px 24px;
+      overflow: hidden;
+      box-shadow: inset 0 -10px 25px rgba(0, 131, 143, 0.15), 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    /* 水缸玻璃高光 */
+    .tank::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16px;
+      width: 18px;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0.45), rgba(255,255,255,0));
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    /* 水體 */
+    .water {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 70%;
+      background: linear-gradient(180deg, rgba(41, 182, 246, 0.52) 0%, rgba(2, 136, 209, 0.68) 100%);
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* 水面波浪 */
+    .wave {
+      position: absolute;
+      top: -12px;
+      left: -50%;
+      width: 200%;
+      height: 22px;
+      background: radial-gradient(circle at 25px 14px, rgba(41, 182, 246, 0.6) 18px, transparent 19px);
+      background-size: 50px 22px;
+      animation: waveMove 4s linear infinite;
+    }
+
+    @keyframes waveMove {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(50px); }
+    }
+
+    /* 缸底小石子裝飾 */
+    .tank-bed {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 22px;
+      background: linear-gradient(180deg, #d7ccc8 0%, #bcaaa4 100%);
+      border-top: 2px solid #a1887f;
+      z-index: 4;
+    }
+
+    /* 掉落水中的水果 */
+    .tank-fruit {
+      position: absolute;
+      top: -70px;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 10;
+      transition: top 1.1s cubic-bezier(0.34, 1.25, 0.64, 1);
+      cursor: pointer;
+    }
+
+    .tank-fruit .emoji {
+      font-size: 2.5rem;
+      filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.2));
+    }
+
+    .tank-fruit .mini-label {
+      font-size: 0.72rem;
+      font-weight: bold;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      color: #263238;
+      margin-top: 2px;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .tank-fruit.settled .mini-label {
+      opacity: 1;
+    }
+
+    /* 漂浮晃動動畫 */
+    .tank-fruit.floating-bob {
+      animation: bobbing 2.4s ease-in-out infinite;
+    }
+
+    @keyframes bobbing {
+      0%, 100% { transform: translateX(-50%) translateY(0px) rotate(-3deg); }
+      50% { transform: translateX(-50%) translateY(7px) rotate(3deg); }
+    }
+
+    /* 水花泡泡 */
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.75);
+      pointer-events: none;
+      z-index: 12;
+      animation: riseUp 1.2s ease-out forwards;
+    }
+
+    @keyframes riseUp {
+      0% {
+        transform: translateY(0) scale(0.6);
+        opacity: 0.9;
+      }
+      100% {
+        transform: translateY(-75px) scale(1.3);
+        opacity: 0;
+      }
+    }
+
+    /* 知識小看板 */
+    .fact-box {
+      margin-top: 12px;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border-left: 5px solid #0288d1;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 820px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+      font-size: 0.96rem;
+      line-height: 1.5;
+      color: #37474f;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🍎 水果浮沉大挑戰 💧</h1>
+    <p class="subtitle">點擊每種水果猜猜看：放進水裡後，它會「浮」在水面還是「沉」到水底呢？</p>
+  </header>
+
+  <div class="status-bar" id="statusBar">
+    <span class="badge badge-progress" id="progressText">已選擇：0 / 8</span>
+    <span class="badge badge-correct" id="correctText">✅ 答對：0 題</span>
+    <span class="badge badge-wrong" id="wrongText">❌ 答錯：0 題</span>
+  </div>
+
+  <div class="fruit-grid" id="fruitGrid"></div>
+
+  <div class="controls">
+    <button class="action-btn btn-test" id="testBtn" disabled>🌊 放入水中測試！</button>
+    <button class="action-btn btn-restart" id="restartBtn">🔄 重新開始</button>
+  </div>
+
+  <div class="tank-wrapper">
+    <div class="tank" id="tank">
+      <div class="water">
+        <div class="wave"></div>
+      </div>
+      <div class="tank-bed"></div>
+    </div>
+    <div class="fact-box" id="factBox">
+      💡 先幫所有水果選擇「浮」或「沉」，選好後按下「放入水中測試！」看看結果吧！
+    </div>
+  </div>
+
+  <script>
+    const FRUITS = [
+      {
+        id: 'apple',
+        name: '蘋果',
+        emoji: '🍎',
+        actual: 'float',
+        fact: '蘋果內部大約有 25% 是空氣，整體密度比水小，所以會浮在水面上喔！'
+      },
+      {
+        id: 'grape',
+        name: '葡萄',
+        emoji: '🍇',
+        actual: 'sink',
+        fact: '葡萄果肉緊實且含糖量高、空氣很少，密度比水大，所以會沉下去！'
+      },
+      {
+        id: 'watermelon',
+        name: '西瓜',
+        emoji: '🍉',
+        actual: 'float',
+        fact: '別看西瓜這麼大又重，它含有大量水分與微小氣隙，平均密度比水小，能浮在水面！'
+      },
+      {
+        id: 'cherry',
+        name: '櫻桃',
+        emoji: '🍒',
+        actual: 'sink',
+        fact: '櫻桃果肉紮實、中間還有一顆硬果核，整體比水重，所以會沉到水底！'
+      },
+      {
+        id: 'banana',
+        name: '香蕉',
+        emoji: '🍌',
+        actual: 'float',
+        fact: '帶皮的香蕉含有許多細小氣孔，密度比水略小，所以會浮在水上！'
+      },
+      {
+        id: 'mango',
+        name: '芒果',
+        emoji: '🥭',
+        actual: 'sink',
+        fact: '芒果果肉厚實且中間有又大又重的果核，密度大於水，會沉到缸底喔！'
+      },
+      {
+        id: 'orange',
+        name: '帶皮橘子',
+        emoji: '🍊',
+        actual: 'float',
+        fact: '橘子皮就像救生衣！果皮裡有許多微小的氣室，能讓橘子浮起來（剝皮後反而會沉下去喔）！'
+      },
+      {
+        id: 'kiwi',
+        name: '奇異果',
+        emoji: '🥝',
+        actual: 'sink',
+        fact: '奇異果內部幾乎沒有空氣縫隙，果肉與種子密度較高，放進水裡會沉下去！'
+      }
+    ];
+
+    let guesses = {};
+    let isTesting = false;
+    let isFinished = false;
+    let timers = [];
+
+    const fruitGrid = document.getElementById('fruitGrid');
+    const testBtn = document.getElementById('testBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const tank = document.getElementById('tank');
+    const statusBar = document.getElementById('statusBar');
+    const progressText = document.getElementById('progressText');
+    const correctText = document.getElementById('correctText');
+    const wrongText = document.getElementById('wrongText');
+    const factBox = document.getElementById('factBox');
+
+    function initGame() {
+      // 清除所有計時器
+      timers.forEach(t => clearTimeout(t));
+      timers = [];
+
+      guesses = {};
+      isTesting = false;
+      isFinished = false;
+
+      statusBar.classList.remove('finished');
+      progressText.textContent = `已選擇：0 / ${FRUITS.length}`;
+      correctText.textContent = '✅ 答對：0 題';
+      wrongText.textContent = '❌ 答錯：0 題';
+      testBtn.disabled = true;
+      factBox.innerHTML = '💡 先幫所有水果選擇「浮」或「沉」，選好後按下「放入水中測試！」看看結果吧！';
+
+      // 清空水缸裡的水果與泡泡
+      tank.querySelectorAll('.tank-fruit, .bubble').forEach(el => el.remove());
+
+      renderFruitCards();
+    }
+
+    function renderFruitCards() {
+      fruitGrid.innerHTML = '';
+
+      FRUITS.forEach(fruit => {
+        const card = document.createElement('div');
+        card.className = 'fruit-card';
+        card.dataset.id = fruit.id;
+
+        card.innerHTML = `
+          <span class="result-tag" id="tag-${fruit.id}"></span>
+          <div class="fruit-emoji">${fruit.emoji}</div>
+          <div class="fruit-name">${fruit.name}</div>
+          <div class="choice-buttons">
+            <button type="button" class="choice-btn btn-float" data-choice="float">浮 ⬆️</button>
+            <button type="button" class="choice-btn btn-sink" data-choice="sink">沉 ⬇️</button>
+          </div>
+        `;
+
+        // 點擊按鈕直接選擇
+        const btnFloat = card.querySelector('.btn-float');
+        const btnSink = card.querySelector('.btn-sink');
+
+        btnFloat.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (isTesting || isFinished) return;
+          setGuess(fruit.id, 'float');
+        });
+
+        btnSink.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (isTesting || isFinished) return;
+          setGuess(fruit.id, 'sink');
+        });
+
+        // 點擊整個水果卡片也可以切換「浮」或「沉」，測試完可點看解析
+        card.addEventListener('click', () => {
+          if (isFinished) {
+            showFruitFact(fruit);
+            return;
+          }
+          if (isTesting) return;
+
+          const current = guesses[fruit.id];
+          const next = current === 'float' ? 'sink' : 'float';
+          setGuess(fruit.id, next);
+        });
+
+        fruitGrid.appendChild(card);
+      });
+    }
+
+    function setGuess(fruitId, choice) {
+      guesses[fruitId] = choice;
+      const card = fruitGrid.querySelector(`[data-id="${fruitId}"]`);
+      card.classList.remove('guess-float', 'guess-sink');
+      card.classList.add(choice === 'float' ? 'guess-float' : 'guess-sink');
+
+      card.querySelector('.btn-float').classList.toggle('active', choice === 'float');
+      card.querySelector('.btn-sink').classList.toggle('active', choice === 'sink');
+
+      const count = Object.keys(guesses).length;
+      progressText.textContent = `已選擇：${count} / ${FRUITS.length}`;
+      testBtn.disabled = count < FRUITS.length;
+    }
+
+    function spawnBubbles(leftPercent, topPx, count = 5) {
+      for (let i = 0; i < count; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        const size = 6 + Math.random() * 10;
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = `calc(${leftPercent}% + ${(Math.random() - 0.5) * 34}px)`;
+        bubble.style.top = `${topPx + (Math.random() - 0.5) * 20}px`;
+        bubble.style.animationDelay = `${Math.random() * 0.2}s`;
+        tank.appendChild(bubble);
+
+        const cleanup = setTimeout(() => bubble.remove(), 1400);
+        timers.push(cleanup);
+      }
+    }
+
+    function showFruitFact(fruit) {
+      const resultWord = fruit.actual === 'float' ? '浮在水面 ⬆️' : '沉到水底 ⬇️';
+      const isRight = guesses[fruit.id] === fruit.actual;
+      const mark = isRight ? '✅ 你猜對了！' : '❌ 差一點點！';
+      factBox.innerHTML = `<strong>${fruit.emoji} ${fruit.name}（${resultWord}）</strong> — ${mark} ${fruit.fact}`;
+    }
+
+    function runExperiment() {
+      if (isTesting || isFinished) return;
+      isTesting = true;
+      testBtn.disabled = true;
+
+      // 鎖定水果卡片
+      document.querySelectorAll('.fruit-card').forEach(c => c.classList.add('locked'));
+      factBox.textContent = '🌊 噗通！水果正在掉進水缸裡，仔細觀察誰浮起來、誰沉下去吧！';
+
+      let correctCount = 0;
+      let wrongCount = 0;
+
+      FRUITS.forEach((fruit, index) => {
+        const leftPercent = 8 + index * 12; // 均勻分布在水缸中
+        const tankFruit = document.createElement('div');
+        tankFruit.className = 'tank-fruit';
+        tankFruit.style.left = `${leftPercent}%`;
+
+        const isCorrect = guesses[fruit.id] === fruit.actual;
+        if (isCorrect) correctCount++;
+        else wrongCount++;
+
+        const actualText = fruit.actual === 'float' ? '浮' : '沉';
+        const badgeIcon = isCorrect ? '✅' : '❌';
+
+        tankFruit.innerHTML = `
+          <span class="emoji">${fruit.emoji}</span>
+          <span class="mini-label">${badgeIcon} ${fruit.name}(${actualText})</span>
+        `;
+
+        tankFruit.addEventListener('click', () => {
+          if (isFinished) showFruitFact(fruit);
+        });
+
+        tank.appendChild(tankFruit);
+
+        // 依序掉落進水中
+        const dropTimer = setTimeout(() => {
+          // 水面約在容器上方 30% (280px * 0.3 = 84px)
+          const targetTop = fruit.actual === 'float' ? 66 : 196;
+          tankFruit.style.top = `${targetTop}px`;
+
+          // 落水時產生氣泡
+          const splashTimer = setTimeout(() => {
+            spawnBubbles(leftPercent, 95, 6);
+          }, 350);
+          timers.push(splashTimer);
+
+          // 到定位後顯示標籤與浮動效果
+          const settleTimer = setTimeout(() => {
+            tankFruit.classList.add('settled');
+            if (fruit.actual === 'float') {
+              tankFruit.classList.add('floating-bob');
+            }
+
+            // 更新上方卡片的對錯標籤
+            const tag = document.getElementById(`tag-${fruit.id}`);
+            tag.textContent = isCorrect ? '✅ 答對' : `❌ 其實會${actualText}`;
+            tag.classList.add('show', isCorrect ? 'correct' : 'wrong');
+          }, 1050);
+          timers.push(settleTimer);
+
+        }, index * 220);
+
+        timers.push(dropTimer);
+      });
+
+      // 全部動畫結束後公布總成績
+      const finishDelay = (FRUITS.length - 1) * 220 + 1150;
+      const finishTimer = setTimeout(() => {
+        isTesting = false;
+        isFinished = true;
+        statusBar.classList.add('finished');
+        correctText.textContent = `✅ 答對：${correctCount} 題`;
+        wrongText.textContent = `❌ 答錯：${wrongCount} 題`;
+
+        if (correctCount === FRUITS.length) {
+          factBox.innerHTML = `🎉 太厲害了！你全部答對了（${correctCount}/${FRUITS.length}）！點擊任意水果可以查看科學小原理喔！`;
+        } else {
+          factBox.innerHTML = `📊 測試完成！你答對了 <strong>${correctCount}</strong> 題、答錯 <strong>${wrongCount}</strong> 題。點擊任意水果可以看看為什麼會浮或沉喔！`;
+        }
+      }, finishDelay);
+
+      timers.push(finishTimer);
+    }
+
+    testBtn.addEventListener('click', runExperiment);
+    restartBtn.addEventListener('click', initGame);
+
+    initGame();
+  </script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>科學大砲挑戰賽 - 精準角度射程實驗</title>
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --primary-dark: #d94e1f;
+            --bg-color: #f0f4f8;
+            --panel-bg: #ffffff;
+            --text-dark: #2b2d42;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 960px;
+            background: var(--panel-bg);
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 4px solid #fff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2b2d42, #3d405b);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.35rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+        }
+
+        .stat-badge strong {
+            color: #ffd166;
+            font-size: 1.1rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            background: #8ecae6;
+            line-height: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: crosshair;
+            touch-action: none; /* 防止手機拖拉瞄準時捲動頁面 */
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(4px);
+            padding: 10px 15px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            pointer-events: none;
+        }
+
+        .aim-hint {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(43, 45, 66, 0.75);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            pointer-events: none;
+        }
+
+        .science-tip {
+            background: #fff8e7;
+            border-top: 2px solid #ffe8b3;
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #664d03;
+        }
+
+        .controls-panel {
+            padding: 18px 25px;
+            background: #ffffff;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+            border-top: 2px solid #edf2f4;
+        }
+
+        @media (max-width: 680px) {
+            .controls-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .angle-control {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .angle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .angle-display {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .quick-angles {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-quick {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-quick:hover:not(:disabled) {
+            background: #e2e8f0;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-adjust {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid #cbd5e1;
+            background: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 10px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-fire {
+            background: linear-gradient(180deg, #ff7b47, var(--primary));
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 var(--primary-dark);
+            transition: all 0.1s;
+        }
+
+        .btn-fire:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 var(--primary-dark);
+        }
+
+        .btn-fire:disabled {
+            background: #94a3b8;
+            box-shadow: 0 5px 0 #64748b;
+            cursor: not-allowed;
+        }
+
+        .btn-reset {
+            background: #e2e8f0;
+            color: var(--text-dark);
+            border: none;
+            padding: 0 16px;
+            border-radius: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="header">
+        <h1>💣 科學大砲：角度與射程實驗</h1>
+        <div class="stats-bar">
+            <div class="stat-badge">🎯 今次射程: <strong id="lastDist">0.0</strong> m</div>
+            <div class="stat-badge">🏆 最高紀錄: <strong id="bestDist">0.0</strong> m (<span id="bestAngle">--</span>°)</div>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="gameCanvas" width="900" height="480"></canvas>
+        <div class="aim-hint">👆 提示：可以直接喺畫面度拖拉嚟調較大砲角度！</div>
+        <div class="hud-overlay">
+            <div>🚀 固定初速: <strong>50 m/s</strong></div>
+            <div>🌍 重力 (g): <strong>9.8 m/s²</strong></div>
+            <div>⛰️ 最高高度: <strong id="maxHeightDisplay">0.0</strong> m</div>
+            <div>⏱️ 飛行時間: <strong id="flightTimeDisplay">0.0</strong> s</div>
+        </div>
+    </div>
+
+    <div class="science-tip">
+        <span>💡</span>
+        <span id="tipText">試下比較 30°、45° 同 70° 嘅大砲傾斜度同砲彈飛出去嘅距離有咩分別！</span>
+    </div>
+
+    <div class="controls-panel">
+        <div class="angle-control">
+            <div class="angle-header">
+                <div class="quick-angles">
+                    <span style="font-weight:bold; color:#475569; align-self:center; margin-right:4px;">快選角度:</span>
+                    <button class="btn-quick" onclick="updateAngle(15)">15°</button>
+                    <button class="btn-quick" onclick="updateAngle(30)">30°</button>
+                    <button class="btn-quick" onclick="updateAngle(45)">45°</button>
+                    <button class="btn-quick" onclick="updateAngle(60)">60°</button>
+                    <button class="btn-quick" onclick="updateAngle(70)">70°</button>
+                </div>
+                <span class="angle-display"><span id="angleVal">45</span>°</span>
+            </div>
+            <div class="slider-row">
+                <button class="btn-adjust" id="btnMinus">−</button>
+                <input type="range" id="angleSlider" min="0" max="90" value="45" step="1">
+                <button class="btn-adjust" id="btnPlus">+</button>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-fire" id="btnFire">🔥 發射</button>
+            <button class="btn-reset" id="btnReset">🔄 重置</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const angleSlider = document.getElementById('angleSlider');
+    const angleVal = document.getElementById('angleVal');
+    const btnMinus = document.getElementById('btnMinus');
+    const btnPlus = document.getElementById('btnPlus');
+    const btnFire = document.getElementById('btnFire');
+    const btnReset = document.getElementById('btnReset');
+    const lastDistEl = document.getElementById('lastDist');
+    const bestDistEl = document.getElementById('bestDist');
+    const bestAngleEl = document.getElementById('bestAngle');
+    const maxHeightEl = document.getElementById('maxHeightDisplay');
+    const flightTimeEl = document.getElementById('flightTimeDisplay');
+    const tipTextEl = document.getElementById('tipText');
+
+    // 物理與畫面常數
+    const GRAVITY = 9.8;
+    const VELOCITY = 50;
+    const SCALE = 2.65;           // 1 公尺 = 2.65 像素
+    const GROUND_Y = 420;         // 地面 Y 座標
+    const CANNON_X = 90;          // 留多啲左邊空間俾量角器
+    const CANNON_Y = GROUND_Y - 12;
+    const BARREL_LEN = 52;        // 砲管長度
+
+    let currentAngle = 45;
+    let prevAngle = null;
+    let isFiring = false;
+    let isDraggingAim = false;
+    let recoilOffset = 0;
+
+    let bestRecord = { dist: 0, angle: 0 };
+    let currentTrail = [];
+    let previousTrail = [];
+    let particles = [];
+
+    let projectile = { x: 0, y: 0, vx: 0, vy: 0, time: 0, maxH: 0, active: false };
+
+    const clouds = [
+        { x: 150, y: 70, scale: 0.9, speed: 0.15 },
+        { x: 460, y: 110, scale: 1.1, speed: 0.1 },
+        { x: 760, y: 60, scale: 0.8, speed: 0.2 }
+    ];
+
+    // --- 角度更新 ---
+    function updateAngle(val) {
+        if (isFiring) return;
+        currentAngle = Math.max(0, Math.min(90, Math.round(val)));
+        angleSlider.value = currentAngle;
+        angleVal.textContent = currentAngle;
+    }
+
+    angleSlider.addEventListener('input', (e) => updateAngle(e.target.value));
+    btnMinus.addEventListener('click', () => updateAngle(currentAngle - 1));
+    btnPlus.addEventListener('click', () => updateAngle(currentAngle + 1));
+
+    // --- 直接喺畫布上面拖拉瞄準 ---
+    function aimFromPointer(clientX, clientY) {
+        if (isFiring) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (clientX - rect.left) * scaleX;
+        const mouseY = (clientY - rect.top) * scaleY;
+
+        const dx = Math.max(0.01, mouseX - CANNON_X);
+        const dy = Math.max(0, CANNON_Y - mouseY);
+        const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+        updateAngle(angleDeg);
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDraggingAim = true;
+        aimFromPointer(e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (isDraggingAim) aimFromPointer(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', () => { isDraggingAim = false; });
+
+    canvas.addEventListener('touchstart', (e) => {
+        isDraggingAim = true;
+        aimFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
+    canvas.addEventListener('touchmove', (e) => {
+        if (isDraggingAim) {
+            e.preventDefault();
+            aimFromPointer(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, { passive: false });
+    window.addEventListener('touchend', () => { isDraggingAim = false; });
+
+    // --- 發射與重置 ---
+    btnFire.addEventListener('click', () => {
+        if (isFiring) return;
+        fireCannon();
+    });
+
+    btnReset.addEventListener('click', () => {
+        if (isFiring) return;
+        bestRecord = { dist: 0, angle: 0 };
+        prevAngle = null;
+        currentTrail = [];
+        previousTrail = [];
+        lastDistEl.textContent = '0.0';
+        bestDistEl.textContent = '0.0';
+        bestAngleEl.textContent = '--';
+        maxHeightEl.textContent = '0.0';
+        flightTimeEl.textContent = '0.0';
+        tipTextEl.textContent = '已重置！試下唔同角度睇下大砲同射程嘅變化。';
+    });
+
+    function setControlsDisabled(disabled) {
+        btnFire.disabled = disabled;
+        angleSlider.disabled = disabled;
+        btnMinus.disabled = disabled;
+        btnPlus.disabled = disabled;
+        document.querySelectorAll('.btn-quick').forEach(b => b.disabled = disabled);
+    }
+
+    function fireCannon() {
+        isFiring = true;
+        setControlsDisabled(true);
+
+        if (currentTrail.length > 0) previousTrail = [...currentTrail];
+        currentTrail = [];
+
+        const rad = currentAngle * Math.PI / 180;
+        const startX = CANNON_X + Math.cos(rad) * BARREL_LEN;
+        const startY = CANNON_Y - Math.sin(rad) * BARREL_LEN;
+
+        projectile = {
+            x: startX,
+            y: startY,
+            vx: VELOCITY * Math.cos(rad),
+            vy: VELOCITY * Math.sin(rad),
+            time: 0,
+            maxH: 0,
+            active: true
+        };
+
+        recoilOffset = 10;
+        spawnSmoke(startX, startY, rad);
+    }
+
+    function handleLanding() {
+        projectile.active = false;
+        isFiring = false;
+        setControlsDisabled(false);
+
+        const distanceMeters = Math.max(0, (projectile.x - CANNON_X) / SCALE);
+        lastDistEl.textContent = distanceMeters.toFixed(1);
+
+        let isNewRecord = false;
+        if (distanceMeters > bestRecord.dist) {
+            bestRecord.dist = distanceMeters;
+            bestRecord.angle = currentAngle;
+            bestDistEl.textContent = distanceMeters.toFixed(1);
+            bestAngleEl.textContent = currentAngle;
+            isNewRecord = true;
+        }
+
+        spawnDirt(projectile.x, GROUND_Y);
+
+        // 回饋訊息
+        if (prevAngle !== null && prevAngle !== currentAngle && (prevAngle + currentAngle === 90)) {
+            tipTextEl.innerHTML = `<strong>✨ 互餘角發現！</strong> 你剛才射 <strong>${prevAngle}°</strong>，今次射 <strong>${currentAngle}°</strong>（相加等於 90°），睇下兩條軌跡嘅落點係咪幾乎一樣？`;
+        } else if (currentAngle === 45) {
+            tipTextEl.innerHTML = `<strong>🏆 45° 黃金角度！</strong> 砲管斜向正中間 45°，水平推進同滯空時間最平衡，射程去到 <strong>${distanceMeters.toFixed(1)}m</strong>！`;
+        } else if (currentAngle >= 65) {
+            tipTextEl.innerHTML = `<strong>⬆️ 角度好高 (${currentAngle}°)！</strong> 砲管翹得好斜，砲彈飛到 <strong>${projectile.maxH.toFixed(1)}m</strong> 咁高，但因為向前嘅分速度細，射程只有 ${distanceMeters.toFixed(1)}m。`;
+        } else if (currentAngle <= 25) {
+            tipTextEl.innerHTML = `<strong>➡️ 角度好低 (${currentAngle}°)！</strong> 砲管好平，砲彈好快跌落地，只飛咗 ${distanceMeters.toFixed(1)}m。`;
+        } else if (isNewRecord) {
+            tipTextEl.innerHTML = `<strong>🎉 新紀錄 (${distanceMeters.toFixed(1)}m)！</strong> 可以再試下微調角度睇下會唔會飛得更遠！`;
+        } else {
+            tipTextEl.textContent = `發射角度 ${currentAngle}°，射程 ${distanceMeters.toFixed(1)}m，最高高度 ${projectile.maxH.toFixed(1)}m。`;
+        }
+        prevAngle = currentAngle;
+    }
+
+    // --- 粒子特效 ---
+    function spawnSmoke(x, y, rad) {
+        for (let i = 0; i < 16; i++) {
+            const spread = (Math.random() - 0.5) * 0.7;
+            const speed = Math.random() * 4 + 1;
+            particles.push({
+                x, y,
+                vx: Math.cos(rad + spread) * speed,
+                vy: -Math.sin(rad + spread) * speed,
+                radius: Math.random() * 9 + 4,
+                alpha: 0.9,
+                color: i % 2 === 0 ? '#ffffff' : '#cbd5e1',
+                type: 'smoke'
+            });
+        }
+    }
+
+    function spawnDirt(x, y) {
+        for (let i = 0; i < 14; i++) {
+            particles.push({
+                x, y,
+                vx: (Math.random() - 0.5) * 6,
+                vy: -Math.random() * 5 - 1,
+                radius: Math.random() * 3 + 2,
+                alpha: 1,
+                color: i % 2 === 0 ? '#6b4c35' : '#4a7c59',
+                type: 'dirt'
+            });
+        }
+    }
+
+    // --- 繪圖部分 ---
+    function drawBackground() {
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+        skyGrad.addColorStop(0, '#4ea8de');
+        skyGrad.addColorStop(1, '#caf0f8');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, canvas.width, GROUND_Y);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        clouds.forEach(c => {
+            c.x += c.speed;
+            if (c.x > canvas.width + 100) c.x = -100;
+            ctx.save();
+            ctx.translate(c.x, c.y);
+            ctx.scale(c.scale, c.scale);
+            ctx.beginPath();
+            ctx.arc(0, 0, 20, 0, Math.PI * 2);
+            ctx.arc(22, -5, 25, 0, Math.PI * 2);
+            ctx.arc(48, 0, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+
+        // 草地與泥土
+        ctx.fillStyle = '#588157';
+        ctx.fillRect(0, GROUND_Y, canvas.width, 12);
+        ctx.fillStyle = '#6b4c35';
+        ctx.fillRect(0, GROUND_Y + 12, canvas.width, canvas.height - GROUND_Y - 12);
+
+        // 距離刻度
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        for (let m = 50; m <= 250; m += 50) {
+            const x = CANNON_X + m * SCALE;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.fillRect(x - 1, GROUND_Y, 2, 10);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(`${m}m`, x, GROUND_Y + 26);
+        }
+    }
+
+    // 繪製量角器同角度指示
+    function drawProtractor() {
+        const rad = currentAngle * Math.PI / 180;
+        const radius = 88;
+
+        ctx.save();
+        // 1. 扇形高亮區 (由 0 度掃到目前角度)
+        ctx.fillStyle = 'rgba(255, 107, 53, 0.22)';
+        ctx.beginPath();
+        ctx.moveTo(CANNON_X, CANNON_Y);
+        ctx.arc(CANNON_X, CANNON_Y, radius, 0, -rad, true);
+        ctx.closePath();
+        ctx.fill();
+
+        // 2. 量角器外弧線 (0° 到 90°)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(CANNON_X, CANNON_Y, radius, 0, -Math.PI / 2, true);
+        ctx.stroke();
+
+        // 0° 水平參考底線
+        ctx.beginPath();
+        ctx.moveTo(CANNON_X, CANNON_Y);
+        ctx.lineTo(CANNON_X + radius + 12, CANNON_Y);
+        ctx.stroke();
+
+        // 3. 刻度 (每 15 度一條，標出 30, 45, 60, 70, 90)
+        const marks = [0, 15, 30, 45, 60, 70, 75, 90];
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        marks.forEach(deg => {
+            const mRad = deg * Math.PI / 180;
+            const innerR = (deg === 45 || deg === 70) ? radius - 10 : radius - 6;
+            const x1 = CANNON_X + Math.cos(mRad) * innerR;
+            const y1 = CANNON_Y - Math.sin(mRad) * innerR;
+            const x2 = CANNON_X + Math.cos(mRad) * radius;
+            const y2 = CANNON_Y - Math.sin(mRad) * radius;
+
+            ctx.strokeStyle = (deg === 45) ? '#ffd166' : 'rgba(255,255,255,0.85)';
+            ctx.lineWidth = (deg === 45) ? 2.5 : 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            // 只顯示主要文字避免太擠
+            if ([0, 30, 45, 60, 70, 90].includes(deg)) {
+                const tx = CANNON_X + Math.cos(mRad) * (radius + 14);
+                const ty = CANNON_Y - Math.sin(mRad) * (radius + 14);
+                ctx.fillStyle = (deg === currentAngle) ? '#ff6b35' : '#1e293b';
+                ctx.fillText(`${deg}°`, tx, ty);
+            }
+        });
+
+        // 4. 砲口延伸瞄準虛線 (未發射時顯示)
+        if (!isFiring) {
+            ctx.strokeStyle = 'rgba(255, 107, 53, 0.9)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(CANNON_X + Math.cos(rad) * BARREL_LEN, CANNON_Y - Math.sin(rad) * BARREL_LEN);
+            ctx.lineTo(CANNON_X + Math.cos(rad) * (radius + 38), CANNON_Y - Math.sin(rad) * (radius + 38));
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        ctx.restore();
+    }
+
+    function drawCannon() {
+        const rad = currentAngle * Math.PI / 180;
+
+        // 砲管旋轉：以 (CANNON_X, CANNON_Y) 為圓心，逆時針旋轉 rad
+        ctx.save();
+        ctx.translate(CANNON_X, CANNON_Y);
+        ctx.rotate(-rad);
+        ctx.translate(-recoilOffset, 0);
+
+        const barrelGrad = ctx.createLinearGradient(0, -12, 0, 12);
+        barrelGrad.addColorStop(0, '#495057');
+        barrelGrad.addColorStop(0.5, '#6c757d');
+        barrelGrad.addColorStop(1, '#212529');
+        ctx.fillStyle = barrelGrad;
+
+        ctx.beginPath();
+        ctx.roundRect(-12, -11, BARREL_LEN + 12, 22, [8, 2, 2, 8]);
+        ctx.fill();
+
+        // 砲口金環
+        ctx.fillStyle = '#ffd166';
+        ctx.fillRect(BARREL_LEN - 6, -12, 6, 24);
+        ctx.restore();
+
+        // 木輪覆蓋旋轉軸心
+        ctx.fillStyle = '#8d5524';
+        ctx.beginPath();
+        ctx.arc(CANNON_X, CANNON_Y + 4, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#3d251e';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffd166';
+        ctx.beginPath();
+        ctx.arc(CANNON_X, CANNON_Y + 4, 4, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function drawTrails() {
+        if (previousTrail.length > 1) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            ctx.moveTo(previousTrail[0].x, previousTrail[0].y);
+            for (let i = 1; i < previousTrail.length; i++) ctx.lineTo(previousTrail[i].x, previousTrail[i].y);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        if (currentTrail.length > 1) {
+            ctx.save();
+            ctx.strokeStyle = '#ff6b35';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(currentTrail[0].x, currentTrail[0].y);
+            for (let i = 1; i < currentTrail.length; i++) ctx.lineTo(currentTrail[i].x, currentTrail[i].y);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    function drawRecordFlag() {
+        if (bestRecord.dist <= 0) return;
+        const flagX = CANNON_X + bestRecord.dist * SCALE;
+        const flagY = GROUND_Y;
+
+        ctx.strokeStyle = '#ffd166';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(flagX, flagY);
+        ctx.lineTo(flagX, flagY - 40);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffd166';
+        ctx.beginPath();
+        ctx.moveTo(flagX, flagY - 40);
+        ctx.lineTo(flagX + 24, flagY - 30);
+        ctx.lineTo(flagX, flagY - 20);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#1e293b';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`🏆 ${bestRecord.dist.toFixed(1)}m`, flagX, flagY - 46);
+    }
+
+    function drawProjectile() {
+        if (!projectile.active) return;
+        ctx.fillStyle = '#1d1e2c';
+        ctx.beginPath();
+        ctx.arc(projectile.x, projectile.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(projectile.x - 2, projectile.y - 2, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function updateAndDrawParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.type === 'dirt') p.vy += 0.25;
+            p.alpha -= 0.025;
+            if (p.alpha <= 0) {
+                particles.splice(i, 1);
+                continue;
+            }
+            ctx.save();
+            ctx.globalAlpha = p.alpha;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // --- 主迴圈 ---
+    let lastTimestamp = 0;
+    function gameLoop(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const dt = Math.min((timestamp - lastTimestamp) / 1000, 0.05) * 1.4;
+        lastTimestamp = timestamp;
+
+        if (recoilOffset > 0) recoilOffset = Math.max(0, recoilOffset - 0.8);
+
+        if (projectile.active) {
+            projectile.time += dt;
+            const dxMeters = projectile.vx * projectile.time;
+            const dyMeters = (projectile.vy * projectile.time) - (0.5 * GRAVITY * projectile.time * projectile.time);
+
+            const rad = currentAngle * Math.PI / 180;
+            const muzzleX = CANNON_X + Math.cos(rad) * BARREL_LEN;
+            const muzzleY = CANNON_Y - Math.sin(rad) * BARREL_LEN;
+
+            projectile.x = muzzleX + dxMeters * SCALE;
+            projectile.y = muzzleY - dyMeters * SCALE;
+
+            const currentH = Math.max(0, (GROUND_Y - projectile.y) / SCALE);
+            if (currentH > projectile.maxH) projectile.maxH = currentH;
+
+            maxHeightEl.textContent = projectile.maxH.toFixed(1);
+            flightTimeEl.textContent = projectile.time.toFixed(1);
+
+            currentTrail.push({ x: projectile.x, y: projectile.y });
+
+            if (projectile.y >= GROUND_Y) {
+                projectile.y = GROUND_Y;
+                currentTrail.push({ x: projectile.x, y: GROUND_Y });
+                handleLanding();
+            }
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBackground();
+        drawProtractor();
+        drawTrails();
+        drawRecordFlag();
+        drawProjectile();
+        drawCannon();
+        updateAndDrawParticles();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>

@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中國傳統文化：互動皮影戲劇場</title>
+  <style>
+    :root {
+      --wood-dark: #3b1d0f;
+      --wood-mid: #6b341b;
+      --gold: #f5c542;
+      --curtain-red: #8e1b1b;
+      --screen-bg: #f6e3b4;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(circle at top, #2c1610 0%, #110806 100%);
+      color: #fff6e5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      padding: 14px 16px 6px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.7rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    header p {
+      margin: 4px 0 0;
+      font-size: 0.92rem;
+      color: #e6cfa7;
+    }
+
+    /* 選擇面板 */
+    .control-bar {
+      width: 95%;
+      max-width: 960px;
+      background: rgba(59, 29, 15, 0.88);
+      border: 2px solid #9c6a34;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 8px 0 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    }
+
+    .selector-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .selector-group label {
+      font-weight: bold;
+      color: var(--gold);
+      font-size: 0.95rem;
+    }
+
+    .choice-btn {
+      background: #4e2514;
+      color: #f9e8c9;
+      border: 1px solid #a8743a;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .choice-btn:hover {
+      background: #6c361f;
+    }
+
+    .choice-btn.active {
+      background: var(--gold);
+      color: #2b1307;
+      font-weight: bold;
+      border-color: #fff2b2;
+      box-shadow: 0 0 10px rgba(245, 197, 66, 0.6);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #d9381e, #a31c0a);
+      color: #fff;
+      border: 2px solid var(--gold);
+      padding: 8px 20px;
+      border-radius: 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: transform 0.15s, filter 0.15s;
+    }
+
+    .primary-btn:hover {
+      transform: scale(1.04);
+      filter: brightness(1.1);
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 舞台區 */
+    .theater-wrapper {
+      position: relative;
+      width: 95%;
+      max-width: 960px;
+      margin-bottom: 20px;
+    }
+
+    /* 後方燈光效果示意條 */
+    .backlight-indicator {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: #ffd98a;
+    }
+
+    .lamp-toggle {
+      background: #3d2212;
+      color: #ffd98a;
+      border: 1px solid #ffd98a;
+      border-radius: 14px;
+      padding: 3px 10px;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    /* 木框皮影戲螢幕 */
+    .stage-frame {
+      position: relative;
+      background: linear-gradient(180deg, var(--wood-mid), var(--wood-dark));
+      border: 14px solid #4d220e;
+      border-radius: 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.85), inset 0 0 18px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+
+    /* 紅布簾裝飾 */
+    .curtain-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background: repeating-linear-gradient(
+        90deg,
+        #7a1212 0px,
+        #a31f1f 25px,
+        #660c0c 50px
+      );
+      z-index: 6;
+      border-bottom: 3px solid var(--gold);
+      pointer-events: none;
+    }
+
+    /* 皮影白布幕 + 背光漸層 */
+    .shadow-screen {
+      position: relative;
+      width: 100%;
+      height: 410px;
+      background: radial-gradient(circle at 50% 48%, #fff6d9 0%, #f1d496 55%, #b88b4a 100%);
+      overflow: hidden;
+      transition: filter 0.4s, background 0.4s;
+      cursor: crosshair;
+    }
+
+    .shadow-screen.lamp-dim {
+      filter: brightness(0.45) contrast(0.9);
+    }
+
+    .shadow-screen.night-theme {
+      background: radial-gradient(circle at 50% 45%, #ffd9a0 0%, #e09658 55%, #6e352c 100%);
+    }
+
+    /* 背後射燈光源視覺效果 */
+    .light-beam {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 520px;
+      height: 520px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(255, 240, 180, 0.75) 0%, rgba(255, 200, 100, 0) 70%);
+      pointer-events: none;
+      z-index: 1;
+      animation: lampFlicker 3s infinite ease-in-out;
+    }
+
+    @keyframes lampFlicker {
+      0%, 100% { opacity: 0.9; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+    }
+
+    /* 背景山水/城牆剪影 */
+    .scenery-layer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+
+    /* 遊戲物件與角色層 */
+    .play-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+    }
+
+    /* 玩家皮影角色 */
+    .puppet-actor {
+      position: absolute;
+      bottom: 45px;
+      left: 120px;
+      width: 110px;
+      height: 135px;
+      transition: left 0.12s ease-out, bottom 0.15s ease-out, transform 0.2s;
+      filter: drop-shadow(8px 6px 3px rgba(45, 20, 5, 0.55));
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .puppet-actor.walking {
+      animation: puppetWalk 0.45s infinite alternate ease-in-out;
+    }
+
+    @keyframes puppetWalk {
+      0% { transform: translateY(0) rotate(-3deg); }
+      100% { transform: translateY(-8px) rotate(4deg); }
+    }
+
+    /* 螢幕內出現的道具/障礙物/目標 */
+    .game-item {
+      position: absolute;
+      font-size: 2.3rem;
+      cursor: pointer;
+      filter: drop-shadow(4px 4px 2px rgba(40, 18, 5, 0.5));
+      z-index: 5;
+      user-select: none;
+      transition: transform 0.1s;
+    }
+
+    .game-item:active {
+      transform: scale(1.25);
+    }
+
+    /* 字幕與旁白條 */
+    .narration-box {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 88%;
+      background: rgba(34, 14, 6, 0.85);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      padding: 8px 14px;
+      text-align: center;
+      font-size: 1rem;
+      color: #fff3d6;
+      z-index: 7;
+      pointer-events: none;
+    }
+
+    /* 螢幕上方遊戲 HUD */
+    .hud-bar {
+      position: absolute;
+      top: 34px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 7;
+      pointer-events: none;
+    }
+
+    .hud-pill {
+      background: rgba(45, 18, 8, 0.82);
+      color: var(--gold);
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid #d49b42;
+      font-weight: bold;
+      font-size: 0.92rem;
+    }
+
+    /* 結束 / 過關彈窗 */
+    .stage-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(25, 10, 4, 0.82);
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .stage-overlay.show {
+      display: flex;
+    }
+
+    .stage-overlay h2 {
+      color: var(--gold);
+      margin: 0 0 10px;
+      font-size: 1.7rem;
+    }
+
+    .stage-overlay p {
+      max-width: 480px;
+      line-height: 1.6;
+      margin: 0 0 18px;
+      color: #ffeccf;
+    }
+
+    /* 前方觀看皮影戲的小朋友剪影區 */
+    .audience-row {
+      position: relative;
+      margin-top: -28px;
+      z-index: 12;
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      padding: 0 30px;
+      pointer-events: none;
+    }
+
+    .kid-silhouette {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.25s;
+    }
+
+    .kid-silhouette.cheer {
+      animation: kidCheer 0.4s ease-in-out 2;
+    }
+
+    @keyframes kidCheer {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
+
+    .kid-label {
+      font-size: 0.72rem;
+      color: #b89872;
+      margin-top: 2px;
+    }
+
+    .hint-footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #d8be98;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🏮 中國文化皮影戲小劇場 🏮</h1>
+    <p>後方燈光映出千年皮影，前方同學一起互動學文化！</p>
+  </header>
+
+  <!-- 角色與故事選擇區 -->
+  <section class="control-bar">
+    <div class="selector-group">
+      <label>1. 選擇角色：</label>
+      <button class="choice-btn active" data-char="wukong">孫悟空</button>
+      <button class="choice-btn" data-char="mulan">花木蘭</button>
+      <button class="choice-btn" data-char="nezha">哪吒</button>
+    </div>
+
+    <div class="selector-group">
+      <label>2. 選擇故事：</label>
+      <button class="choice-btn active" data-story="1">故事一：花果山歷險記</button>
+      <button class="choice-btn" data-story="2" id="story2Btn">故事二：除夕年獸大作戰</button>
+    </div>
+
+    <button class="primary-btn" id="startBtn">▶ 開始演皮影戲！</button>
+  </section>
+
+  <!-- 戲台與觀眾 -->
+  <main class="theater-wrapper">
+    <div class="backlight-indicator">
+      <span>💡 後方皮影投射燈狀態：<strong id="lampStatus">開啟中（投射角色影子到幕布）</strong></span>
+      <button class="lamp-toggle" id="lampToggleBtn">開/關 背光燈</button>
+    </div>
+
+    <div class="stage-frame">
+      <div class="curtain-top"></div>
+
+      <div class="shadow-screen" id="shadowScreen">
+        <div class="light-beam" id="lightBeam"></div>
+
+        <!-- 傳統山水剪影背景 -->
+        <svg class="scenery-layer" viewBox="0 0 960 150" preserveAspectRatio="none">
+          <path d="M0,150 L0,90 Q90,30 190,95 T390,85 T610,70 T820,95 L960,65 L960,150 Z" fill="#4a2810"/>
+          <path d="M0,150 L0,115 Q160,70 300,120 T650,105 T960,115 L960,150 Z" fill="#2c1507"/>
+          <!-- 中式涼亭剪影 -->
+          <path d="M740,120 L740,85 L725,85 L765,62 L805,85 L790,85 L790,120 Z" fill="#2c1507"/>
+        </svg>
+
+        <!-- HUD -->
+        <div class="hud-bar">
+          <div class="hud-pill" id="levelBadge">關卡：尚未開始</div>
+          <div class="hud-pill" id="scoreBadge">互動積分：0 / 100</div>
+          <div class="hud-pill" id="timerBadge">剩餘時間：--</div>
+        </div>
+
+        <!-- 遊戲互動區 -->
+        <div class="play-layer" id="playLayer">
+          <!-- 主角皮影 SVG 容器 -->
+          <div class="puppet-actor" id="puppetActor"></div>
+        </div>
+
+        <!-- 字幕條 -->
+        <div class="narration-box" id="narrationBox">
+          請先在上方選擇「角色」與「故事」，再按「開始演皮影戲！」
+        </div>
+
+        <!-- 過關或切換關卡彈窗 -->
+        <div class="stage-overlay" id="stageOverlay">
+          <h2 id="overlayTitle">🎉 第一關演出大成功！</h2>
+          <p id="overlayDesc">台下的小朋友都拍爛手掌！你想繼續開啟下一個故事與全新玩法的關卡嗎？</p>
+          <button class="primary-btn" id="nextLevelBtn">✨ 生成第二個故事與第二關遊戲！</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模擬坐在螢幕前面看皮影戲的小朋友 -->
+    <div class="audience-row" id="audienceRow">
+      <div class="kid-silhouette">
+        <svg width="64" height="72" viewBox="0 0 64 72">
+          <circle cx="32" cy="20" r="13" fill="#120906"/>
+          <path d="M12,70 Q12,38 32,38 Q52,38 52,70 Z" fill="#180c08"/>
+        </svg>
+        <span class="kid-label">小明</span>
+      </div>
+      <div class="kid-silhouette">
+        <svg width="64" height="72" viewBox="0 0 64 72">
+          <circle cx="19" cy="14" r="5" fill="#120906"/>
+          <circle cx="45" cy="14" r="5" fill="#120906"/>
+          <circle cx="32" cy="22" r="12" fill="#120906"/>
+          <path d="M14,70 Q14,39 32,39 Q50,39 50,70 Z" fill="#180c08"/>
+        </svg>
+        <span class="kid-label">小美</span>
+      </div>
+      <div class="kid-silhouette">
+        <svg width="64" height="72" viewBox="0 0 64 72">
+          <circle cx="32" cy="21" r="13" fill="#120906"/>
+          <path d="M10,70 Q12,38 32,38 Q52,38 54,70 Z" fill="#180c08"/>
+        </svg>
+        <span class="kid-label">志強</span>
+      </div>
+      <div class="kid-silhouette">
+        <svg width="64" height="72" viewBox="0 0 64 72">
+          <circle cx="32" cy="20" r="12" fill="#120906"/>
+          <path d="M14,70 Q14,40 32,40 Q50,40 50,70 Z" fill="#180c08"/>
+        </svg>
+        <span class="kid-label">老師</span>
+      </div>
+    </div>
+
+    <div class="hint-footer">
+      🎮 操作提示：故事播放後會進入螢幕互動遊戲！可用 <strong>滑鼠移動／點擊</strong> 或 <strong>方向鍵 ← → ↑</strong> 操控皮影戲！
+    </div>
+  </main>
+
+  <script>
+    // ====== 皮影角色 SVG（仿傳統半透明染色皮影造型） ======
+    const CHARACTERS = {
+      wukong: {
+        name: "孫悟空",
+        svg: `
+          <svg viewBox="0 0 110 135" width="110" height="135">
+            <!-- 金箍棒 -->
+            <rect x="82" y="18" width="7" height="98" rx="3" fill="#d48817" stroke="#231005" stroke-width="2" transform="rotate(14 85 65)"/>
+            <!-- 鳳翅紫金冠翎毛 -->
+            <path d="M45,24 Q20,2 10,16" fill="none" stroke="#c92a2a" stroke-width="4" stroke-linecap="round"/>
+            <path d="M55,24 Q75,0 92,14" fill="none" stroke="#c92a2a" stroke-width="4" stroke-linecap="round"/>
+            <!-- 頭與緊箍 -->
+            <circle cx="52" cy="36" r="16" fill="#e69d45" stroke="#231005" stroke-width="2.5"/>
+            <rect x="37" y="26" width="30" height="5" rx="2" fill="#ffd43b" stroke="#231005" stroke-width="1.5"/>
+            <circle cx="58" cy="35" r="2.2" fill="#231005"/>
+            <!-- 虎皮裙與戰甲 -->
+            <path d="M36,54 L68,54 L76,94 L28,94 Z" fill="#c92a2a" stroke="#231005" stroke-width="2.5"/>
+            <path d="M31,82 L73,82 L76,96 L28,96 Z" fill="#f59f00" stroke="#231005" stroke-width="2"/>
+            <!-- 腳 -->
+            <path d="M42,96 L38,125 M62,96 L68,125" stroke="#231005" stroke-width="7" stroke-linecap="round"/>
+          </svg>`
+      },
+      mulan: {
+        name: "花木蘭",
+        svg: `
+          <svg viewBox="0 0 110 135" width="110" height="135">
+            <!-- 寶劍 -->
+            <path d="M84,22 L92,98" stroke="#e9ecef" stroke-width="5" stroke-linecap="round"/>
+            <path d="M84,22 L92,98" stroke="#231005" stroke-width="1.5"/>
+            <!-- 髮髻與紅纓 -->
+            <circle cx="48" cy="20" r="8" fill="#1c110a"/>
+            <path d="M44,18 Q25,10 18,28" fill="none" stroke="#e03131" stroke-width="5" stroke-linecap="round"/>
+            <!-- 臉 -->
+            <circle cx="52" cy="36" r="15" fill="#f3c69f" stroke="#231005" stroke-width="2.5"/>
+            <circle cx="58" cy="35" r="2.2" fill="#231005"/>
+            <!-- 戰袍與披風 -->
+            <path d="M38,52 L20,105 L44,95 Z" fill="#9c1c1c" stroke="#231005" stroke-width="2"/>
+            <path d="M38,52 L68,52 L74,98 L34,98 Z" fill="#2b6cb0" stroke="#231005" stroke-width="2.5"/>
+            <path d="M38,68 L70,68" stroke="#ffd43b" stroke-width="4"/>
+            <!-- 腳 -->
+            <path d="M44,98 L40,126 M62,98 L66,126" stroke="#231005" stroke-width="6.5" stroke-linecap="round"/>
+          </svg>`
+      },
+      nezha: {
+        name: "哪吒",
+        svg: `
+          <svg viewBox="0 0 110 135" width="110" height="135">
+            <!-- 混天綾 -->
+            <path d="M22,55 Q5,35 18,18 M84,52 Q102,38 92,16" fill="none" stroke="#e03131" stroke-width="5" stroke-linecap="round"/>
+            <!-- 雙髻 -->
+            <circle cx="38" cy="22" r="7" fill="#1c110a"/>
+            <circle cx="64" cy="22" r="7" fill="#1c110a"/>
+            <circle cx="51" cy="36" r="15" fill="#f5cba7" stroke="#231005" stroke-width="2.5"/>
+            <circle cx="57" cy="35" r="2.2" fill="#231005"/>
+            <!-- 紅肚兜 -->
+            <path d="M37,52 L65,52 L69,92 L33,92 Z" fill="#d92626" stroke="#231005" stroke-width="2.5"/>
+            <circle cx="51" cy="70" r="9" fill="none" stroke="#ffd43b" stroke-width="3"/>
+            <!-- 風火輪 -->
+            <circle cx="38" cy="120" r="10" fill="none" stroke="#ff6b00" stroke-width="4"/>
+            <circle cx="68" cy="120" r="10" fill="none" stroke="#ff6b00" stroke-width="4"/>
+          </svg>`
+      }
+    };
+
+    // ====== 狀態管理 ======
+    let selectedChar = "wukong";
+    let selectedStory = 1; // 1 = 第一關歷險記, 2 = 第二關年獸大作戰
+    let isPlaying = false;
+    let score = 0;
+    let targetScore = 100;
+    let timeLeft = 20;
+    let gameLoopId = null;
+    let spawnTimerId = null;
+    let countdownId = null;
+    let actorX = 120;
+    let actorY = 45;
+    let lampOn = true;
+
+    // DOM 元素
+    const shadowScreen = document.getElementById("shadowScreen");
+    const lightBeam = document.getElementById("lightBeam");
+    const playLayer = document.getElementById("playLayer");
+    const puppetActor = document.getElementById("puppetActor");
+    const narrationBox = document.getElementById("narrationBox");
+    const levelBadge = document.getElementById("levelBadge");
+    const scoreBadge = document.getElementById("scoreBadge");
+    const timerBadge = document.getElementById("timerBadge");
+    const startBtn = document.getElementById("startBtn");
+    const stageOverlay = document.getElementById("stageOverlay");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayDesc = document.getElementById("overlayDesc");
+    const nextLevelBtn = document.getElementById("nextLevelBtn");
+    const lampToggleBtn = document.getElementById("lampToggleBtn");
+    const lampStatus = document.getElementById("lampStatus");
+
+    // 簡易音效（Web Audio API）
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function playTone(freq, duration = 0.12, type = "triangle") {
+      try {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // 讓台前小朋友開心歡呼
+    function cheerAudience() {
+      const kids = document.querySelectorAll(".kid-silhouette");
+      kids.forEach((kid, idx) => {
+        setTimeout(() => {
+          kid.classList.remove("cheer");
+          void kid.offsetWidth;
+          kid.classList.add("cheer");
+        }, idx * 80);
+      });
+    }
+
+    // 更新角色外觀
+    function renderPuppet() {
+      puppetActor.innerHTML = CHARACTERS[selectedChar].svg;
+      puppetActor.style.left = actorX + "px";
+      puppetActor.style.bottom = actorY + "px";
+    }
+    renderPuppet();
+
+    // 切換背光燈
+    lampToggleBtn.addEventListener("click", () => {
+      lampOn = !lampOn;
+      shadowScreen.classList.toggle("lamp-dim", !lampOn);
+      lightBeam.style.display = lampOn ? "block" : "none";
+      lampStatus.textContent = lampOn ? "開啟中（投射角色影子到幕布）" : "已關閉（幕布變暗）";
+    });
+
+    // 選擇角色按鈕
+    document.querySelectorAll("[data-char]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (isPlaying) return;
+        document.querySelectorAll("[data-char]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedChar = btn.dataset.char;
+        renderPuppet();
+        narrationBox.textContent = `已選擇主角「${CHARACTERS[selectedChar].name}」！按開始就會映上皮影幕布！`;
+      });
+    });
+
+    // 選擇故事按鈕
+    document.querySelectorAll("[data-story]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (isPlaying) return;
+        selectStoryUI(Number(btn.dataset.story));
+      });
+    });
+
+    function selectStoryUI(storyNum) {
+      selectedStory = storyNum;
+      document.querySelectorAll("[data-story]").forEach(b => {
+        b.classList.toggle("active", Number(b.dataset.story) === storyNum);
+      });
+      shadowScreen.classList.toggle("night-theme", storyNum === 2);
+      narrationBox.textContent = storyNum === 1
+        ? "故事一《花果山歷險記》：準備幫主角收集仙桃、躲避烏雲！"
+        : "故事二《除夕年獸大作戰》：準備用滑鼠點擊燈籠與銅鑼，嚇跑年獸！";
+    }
+
+    // 清除畫面上殘留的遊戲物件
+    function clearItems() {
+      playLayer.querySelectorAll(".game-item").forEach(el => el.remove());
+    }
+
+    function stopAllTimers() {
+      clearInterval(spawnTimerId);
+      clearInterval(countdownId);
+      cancelAnimationFrame(gameLoopId);
+    }
+
+    // 開始演出（先播放短故事旁白，再開始小遊戲）
+    startBtn.addEventListener("click", () => startShow(selectedStory));
+
+    function startShow(storyNum) {
+      if (isPlaying) return;
+      isPlaying = true;
+      startBtn.disabled = true;
+      stageOverlay.classList.remove("show");
+      clearItems();
+      stopAllTimers();
+      selectStoryUI(storyNum);
+
+      const heroName = CHARACTERS[selectedChar].name;
+      score = 0;
+      scoreBadge.textContent = `互動積分：0 / ${targetScore}`;
+
+      if (storyNum === 1) {
+        // ====== 故事一：花果山歷險記 ======
+        levelBadge.textContent = "第一關：花果山歷險記";
+        timerBadge.textContent = "故事上演中...";
+        puppetActor.classList.add("walking");
+        narrationBox.textContent = `📖 旁白：從前，${heroName} 走進皮影山林歷險，忽然天降仙桃與妖霧！`;
+        playTone(523, 0.2);
+
+        setTimeout(() => {
+          if (!isPlaying) return;
+          narrationBox.textContent = `🎮 遊戲一開始！移動滑鼠或按 ← → 接住「🍑仙桃」(+20分)，避開「⚡黑雲」(-15分)！`;
+          startLevel1Game();
+        }, 2400);
+
+      } else {
+        // ====== 故事二：除夕年獸大作戰 ======
+        levelBadge.textContent = "第二關：除夕年獸大作戰";
+        timerBadge.textContent = "故事上演中...";
+        puppetActor.classList.add("walking");
+        narrationBox.textContent = `📖 旁白：除夕夜到了！可怕的年獸闖進村莊，${heroName} 需要同學幫忙點燈敲鑼！`;
+        playTone(392, 0.25);
+
+        setTimeout(() => {
+          if (!isPlaying) return;
+          narrationBox.textContent = `🎮 遊戲二開始！快用滑鼠「點擊」冒出來的「🏮紅燈籠」與「🥁銅鑼」趕走年獸「👹」！`;
+          startLevel2Game();
+        }, 2400);
+      }
+    }
+
+    // ====== 遊戲一：接仙桃避黑雲（移動接物） ======
+    function startLevel1Game() {
+      timeLeft = 22;
+      timerBadge.textContent = `剩餘時間：${timeLeft}秒`;
+      const screenWidth = shadowScreen.clientWidth;
+
+      spawnTimerId = setInterval(() => {
+        const item = document.createElement("div");
+        item.className = "game-item";
+        const isGood = Math.random() > 0.32;
+        item.dataset.type = isGood ? "good" : "bad";
+        item.textContent = isGood ? (Math.random() > 0.4 ? "🍑" : "✨") : "⚡";
+        item.style.left = Math.random() * (screenWidth - 60) + 15 + "px";
+        item.style.top = "-40px";
+        item.dataset.speed = (2.4 + Math.random() * 2.2).toString();
+        playLayer.appendChild(item);
+      }, 650);
+
+      countdownId = setInterval(() => {
+        timeLeft--;
+        timerBadge.textContent = `剩餘時間：${timeLeft}秒`;
+        if (timeLeft <= 0) finishLevel(1, score >= 60);
+      }, 1000);
+
+      function loop() {
+        if (!isPlaying) return;
+        const items = playLayer.querySelectorAll(".game-item");
+        const actorRect = puppetActor.getBoundingClientRect();
+
+        items.forEach(item => {
+          let top = parseFloat(item.style.top) + parseFloat(item.dataset.speed);
+          item.style.top = top + "px";
+
+          const itemRect = item.getBoundingClientRect();
+          const hit = !(
+            actorRect.right - 20 < itemRect.left ||
+            actorRect.left + 20 > itemRect.right ||
+            actorRect.bottom - 10 < itemRect.top ||
+            actorRect.top + 20 > itemRect.bottom
+          );
+
+          if (hit) {
+            if (item.dataset.type === "good") {
+              score += 20;
+              playTone(660, 0.12);
+              cheerAudience();
+            } else {
+              score = Math.max(0, score - 15);
+              playTone(180, 0.2, "sawtooth");
+            }
+            scoreBadge.textContent = `互動積分：${score} / ${targetScore}`;
+            item.remove();
+            if (score >= targetScore) {
+              finishLevel(1, true);
+            }
+          } else if (top > 420) {
+            item.remove();
+          }
+        });
+
+        gameLoopId = requestAnimationFrame(loop);
+      }
+      gameLoopId = requestAnimationFrame(loop);
+    }
+
+    // ====== 遊戲二：點擊燈籠銅鑼驅趕年獸（打地鼠／射擊式節奏點擊） ======
+    function startLevel2Game() {
+      timeLeft = 22;
+      timerBadge.textContent = `剩餘時間：${timeLeft}秒`;
+      const screenWidth = shadowScreen.clientWidth;
+
+      spawnTimerId = setInterval(() => {
+        const item = document.createElement("div");
+        item.className = "game-item";
+        const roll = Math.random();
+        let kind = "lantern";
+        if (roll < 0.4) kind = "gong";
+        else if (roll > 0.72) kind = "nian";
+
+        item.dataset.kind = kind;
+        item.textContent = kind === "lantern" ? "🏮" : kind === "gong" ? "🥁" : "👹";
+        item.style.left = Math.random() * (screenWidth - 90) + 30 + "px";
+        item.style.top = Math.random() * 230 + 60 + "px";
+
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (!isPlaying) return;
+          if (kind === "nian") {
+            // 點擊年獸也可以嚇跑牠但會扣小分，鼓勵點燈籠與銅鑼，或改成點銅鑼驅逐
+            score += 25;
+            playTone(784, 0.15);
+            narrationBox.textContent = `💥 擊退年獸！台下的小朋友大聲拍手！`;
+            cheerAudience();
+          } else if (kind === "gong") {
+            score += 20;
+            playTone(587, 0.18);
+            narrationBox.textContent = `🥁 噹噹噹！銅鑼聲嚇得年獸不敢靠近！`;
+            cheerAudience();
+          } else {
+            score += 15;
+            playTone(523, 0.12);
+            narrationBox.textContent = `🏮 點亮紅燈籠！皮影幕布變得更加紅火喜慶！`;
+          }
+          scoreBadge.textContent = `互動積分：${score} / ${targetScore}`;
+          item.remove();
+          if (score >= targetScore) {
+            finishLevel(2, true);
+          }
+        });
+
+        playLayer.appendChild(item);
+        // 1.7秒後沒點到就消失
+        setTimeout(() => item.remove(), 1700);
+      }, 580);
+
+      countdownId = setInterval(() => {
+        timeLeft--;
+        timerBadge.textContent = `剩餘時間：${timeLeft}秒`;
+        if (timeLeft <= 0) finishLevel(2, score >= 60);
+      }, 1000);
+    }
+
+    // ====== 關卡結束處理 ======
+    function finishLevel(levelNum, isWin) {
+      isPlaying = false;
+      stopAllTimers();
+      clearItems();
+      puppetActor.classList.remove("walking");
+      startBtn.disabled = false;
+
+      if (isWin) cheerAudience();
+
+      if (levelNum === 1) {
+        overlayTitle.textContent = isWin ? "🎉 第一關《花果山歷險記》大成功！" : "⏰ 第一關演出結束！";
+        overlayDesc.textContent = `你幫 ${CHARACTERS[selectedChar].name} 獲得了 ${score} 分！台下的小明、小美都看得很入迷！點擊下方按鈕，就會立即產生「第二個故事與第二關新遊戲」！`;
+        nextLevelBtn.textContent = "✨ 按此產生第二個故事與第二關遊戲！";
+        nextLevelBtn.dataset.action = "goLevel2";
+      } else {
+        overlayTitle.textContent = isWin ? "🏆 第二關《除夕年獸大作戰》圓滿落幕！" : "⏰ 第二關演出結束！";
+        overlayDesc.textContent = `太棒了！你在第二關獲得 ${score} 分，成功保護村莊並認識了中國春節「年獸」與皮影文化！`;
+        nextLevelBtn.textContent = "🔄 再玩一次或重回第一關";
+        nextLevelBtn.dataset.action = "goLevel1";
+      }
+
+      stageOverlay.classList.add("show");
+    }
+
+    // 「生成第二個故事、第二個遊戲、第二個關卡」按鈕
+    nextLevelBtn.addEventListener("click", () => {
+      if (nextLevelBtn.dataset.action === "goLevel2") {
+        startShow(2);
+      } else {
+        startShow(1);
+      }
+    });
+
+    // ====== 玩家控制皮影角色（滑鼠 + 鍵盤） ======
+    shadowScreen.addEventListener("mousemove", (e) => {
+      if (!isPlaying) return;
+      const rect = shadowScreen.getBoundingClientRect();
+      let newX = e.clientX - rect.left - 55;
+      newX = Math.max(10, Math.min(rect.width - 120, newX));
+      actorX = newX;
+      puppetActor.style.left = actorX + "px";
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (!isPlaying) return;
+      const maxW = shadowScreen.clientWidth - 120;
+      if (e.key === "ArrowLeft") {
+        actorX = Math.max(10, actorX - 28);
+      } else if (e.key === "ArrowRight") {
+        actorX = Math.min(maxW, actorX + 28);
+      } else if (e.key === "ArrowUp") {
+        puppetActor.style.bottom = "95px";
+        setTimeout(() => puppetActor.style.bottom = "45px", 240);
+      }
+      puppetActor.style.left = actorX + "px";
+    });
+  </script>
+</body>
+</html>

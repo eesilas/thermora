@@ -1,0 +1,1914 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小小家政廚神｜互動烹飪及上菜教室</title>
+  <style>
+    :root {
+      --bg-cream: #fff8ee;
+      --bg-panel: #ffffff;
+      --primary: #ff7a3d;
+      --primary-dark: #e25b1d;
+      --secondary: #3ba99c;
+      --accent: #ffc947;
+      --text-main: #3d2c2e;
+      --text-sub: #7a686a;
+      --border-soft: #f0dfd1;
+      --shadow: 0 8px 24px rgba(105, 65, 35, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "PingFang HK", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(circle at top, #fffdf9 0%, #ffeed9 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #ff8547 0%, #ff6037 100%);
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(226, 91, 29, 0.25);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      font-size: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      letter-spacing: 0.5px;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      opacity: 0.92;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn-header {
+      background: rgba(255, 255, 255, 0.22);
+      border: 1.5px solid rgba(255, 255, 255, 0.45);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-header:hover {
+      background: rgba(255, 255, 255, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* Wrapper */
+    .page-container {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 18px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Main 3-Column Kitchen */
+    main {
+      display: grid;
+      grid-template-columns: 310px 1fr 280px;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border-radius: 24px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 2px solid var(--border-soft);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 2px dashed var(--border-soft);
+    }
+
+    .panel-title h2 {
+      margin: 0;
+      font-size: 1.08rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-badge {
+      background: var(--primary);
+      color: white;
+      font-size: 0.76rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .sub-hint {
+      font-size: 0.82rem;
+      color: var(--text-sub);
+    }
+
+    /* Ingredients Grid */
+    .ingredients-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      flex: 1;
+    }
+
+    .item-card {
+      background: #fffaf4;
+      border: 2px solid #f2e2d2;
+      border-radius: 15px;
+      padding: 10px 6px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .item-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      box-shadow: 0 6px 14px rgba(255, 122, 61, 0.15);
+    }
+
+    .item-card.selected {
+      background: #fff1e6;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 122, 61, 0.2);
+    }
+
+    .item-card.selected::after {
+      content: "✓";
+      position: absolute;
+      top: 5px;
+      right: 7px;
+      background: var(--primary);
+      color: white;
+      width: 19px;
+      height: 19px;
+      border-radius: 50%;
+      font-size: 11px;
+      font-weight: bold;
+      display: grid;
+      place-items: center;
+    }
+
+    .item-emoji {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .item-name {
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .item-cat {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      background: rgba(0, 0, 0, 0.04);
+      padding: 1px 7px;
+      border-radius: 999px;
+    }
+
+    /* Cooking Methods */
+    .methods-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .method-card {
+      background: #f8fbfb;
+      border: 2px solid #dceceb;
+      border-radius: 18px;
+      padding: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+
+    .method-card:hover {
+      transform: translateX(-3px);
+      border-color: var(--secondary);
+    }
+
+    .method-card.selected {
+      background: #e8f8f6;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(59, 169, 156, 0.2);
+    }
+
+    .method-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: white;
+      display: grid;
+      place-items: center;
+      font-size: 1.65rem;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+      flex-shrink: 0;
+    }
+
+    .method-info h3 {
+      margin: 0;
+      font-size: 1.02rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .method-tool-tag {
+      font-size: 0.72rem;
+      background: var(--secondary);
+      color: white;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .method-info p {
+      margin: 4px 0 0;
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      line-height: 1.4;
+    }
+
+    /* Center Stage */
+    .kitchen-stage {
+      background: linear-gradient(180deg, #fffcf7 0%, #fff1df 65%, #ecd6be 65%, #e3c7aa 100%);
+      position: relative;
+      overflow: hidden;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+
+    .stage-status-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(6px);
+      padding: 10px 14px;
+      border-radius: 16px;
+      border: 1.5px solid var(--border-soft);
+      z-index: 2;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .selected-tray {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tray-pill {
+      background: #fff2e6;
+      border: 1px solid #ffd1ad;
+      color: #a1450b;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      animation: popIn 0.2s ease;
+    }
+
+    .tool-badge {
+      background: #e7f6f4;
+      border: 1px solid #a8dfd8;
+      color: #1f6b62;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    /* Pot & Stove Area */
+    .stove-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      height: 310px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      margin: 10px auto;
+      cursor: pointer;
+    }
+
+    .cooking-hint-bubble {
+      position: absolute;
+      top: 4px;
+      background: rgba(61, 44, 46, 0.88);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: all 0.25s;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .cooking-hint-bubble.visible {
+      opacity: 1;
+      transform: translateY(0);
+      animation: floatUpDown 1.2s infinite ease-in-out;
+    }
+
+    .pot-svg {
+      width: 320px;
+      height: 290px;
+      overflow: visible;
+      transition: transform 0.15s ease;
+    }
+
+    .stove-wrapper.stirring .pot-svg {
+      animation: potShake 0.3s ease;
+    }
+
+    /* Flame & Cooking Animations */
+    .flames-group {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      transform-origin: center bottom;
+    }
+
+    .is-cooking .flames-group { opacity: 1; }
+
+    .flame-outer {
+      animation: flickerOuter 0.25s infinite alternate ease-in-out;
+      transform-origin: 160px 235px;
+    }
+
+    .flame-inner {
+      animation: flickerInner 0.18s infinite alternate ease-in-out;
+      transform-origin: 160px 235px;
+    }
+
+    .is-high-heat .flames-group {
+      transform: scale(1.22, 1.3);
+    }
+
+    .steam-puff { opacity: 0; }
+    .is-cooking .steam-puff { animation: riseSteam 1.6s infinite ease-out; }
+    .is-cooking .steam-puff.delay-1 { animation-delay: 0.4s; }
+    .is-cooking .steam-puff.delay-2 { animation-delay: 0.9s; }
+
+    .bubble-dot { opacity: 0; }
+    .is-cooking .bubble-dot { animation: bubblePop 0.9s infinite ease-in; }
+    .is-cooking .bubble-dot.b2 { animation-delay: 0.3s; }
+    .is-cooking .bubble-dot.b3 { animation-delay: 0.6s; }
+
+    .spatula-group {
+      transform-origin: 215px 100px;
+      transition: transform 0.3s;
+    }
+    .is-cooking .spatula-group {
+      animation: stirFryMotion 0.55s infinite alternate ease-in-out;
+    }
+
+    .pot-ingredients-layer {
+      font-size: 28px;
+      text-anchor: middle;
+    }
+
+    /* Controls */
+    .stage-controls {
+      width: 100%;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .progress-wrap {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 999px;
+      height: 16px;
+      padding: 3px;
+      border: 1.5px solid #e4cbb2;
+      display: none;
+    }
+
+    .progress-wrap.active { display: block; }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #ffb347 0%, #ff5722 100%);
+      transition: width 0.1s linear;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .btn-cook {
+      flex: 1;
+      max-width: 260px;
+      background: linear-gradient(135deg, #ff7a3d 0%, #e64926 100%);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 16px;
+      font-size: 1.08rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(230, 73, 38, 0.35);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-cook:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(230, 73, 38, 0.45);
+    }
+
+    .btn-cook:disabled {
+      background: #cbbab0;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-reset {
+      background: white;
+      color: var(--text-main);
+      border: 2px solid #e5d5c5;
+      padding: 14px 16px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-reset:hover:not(:disabled) {
+      background: #fff5eb;
+      border-color: var(--primary);
+    }
+
+    .btn-reset:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ========= 畫出來的餐檯場景 (Drawn Dining Table) ========= */
+    .dining-table-panel {
+      background: rgba(255, 255, 255, 0.72);
+      border: 2px solid var(--border-soft);
+      border-radius: 24px;
+      padding: 18px 22px 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .table-header h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-clear-table {
+      background: #fff5ea;
+      border: 1.5px solid #e2c09d;
+      color: #6b4c2f;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-clear-table:hover {
+      background: #ffe8d1;
+    }
+
+    .drawn-table-scene {
+      position: relative;
+      padding: 6px 10px 0;
+    }
+
+    /* 木餐檯檯面 */
+    .table-top-surface {
+      position: relative;
+      min-height: 175px;
+      border-radius: 20px 20px 6px 6px;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          rgba(120, 68, 25, 0.06) 0px,
+          rgba(120, 68, 25, 0.06) 4px,
+          transparent 4px,
+          transparent 36px
+        ),
+        linear-gradient(180deg, #deb07a 0%, #cf985c 65%, #c28749 100%);
+      border: 3px solid #a86f38;
+      border-bottom: none;
+      box-shadow: inset 0 6px 14px rgba(255, 240, 215, 0.45);
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    /* 檯面中央格仔餐檯布 */
+    .table-runner {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 92px;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          rgba(255, 255, 255, 0.22) 0px,
+          rgba(255, 255, 255, 0.22) 14px,
+          rgba(255, 232, 210, 0.35) 14px,
+          rgba(255, 232, 210, 0.35) 28px
+        );
+      border-top: 2px dashed rgba(255, 255, 255, 0.65);
+      border-bottom: 2px dashed rgba(255, 255, 255, 0.65);
+      pointer-events: none;
+    }
+
+    /* 擺在檯面上的餸菜列 */
+    .table-dishes-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: flex-end;
+      gap: 22px;
+      width: 100%;
+      min-height: 138px;
+    }
+
+    .table-empty-hint {
+      width: 100%;
+      text-align: center;
+      background: rgba(255, 251, 244, 0.88);
+      padding: 20px 18px;
+      border-radius: 16px;
+      color: #704b29;
+      font-weight: 700;
+      font-size: 0.95rem;
+      box-shadow: 0 3px 10px rgba(90, 50, 15, 0.12);
+    }
+
+    /* 直接放在檯面上的碗或碟（無白框卡片） */
+    .table-dish-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      animation: serveSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .table-dish-item:hover {
+      transform: translateY(-5px) scale(1.03);
+    }
+
+    .table-dish-svg {
+      width: 164px;
+      height: 124px;
+      filter: drop-shadow(0 8px 6px rgba(72, 38, 12, 0.28));
+    }
+
+    .table-dish-label {
+      margin-top: 2px;
+      background: rgba(255, 250, 240, 0.95);
+      border: 1.5px solid #c99763;
+      color: #4a2e14;
+      padding: 3px 11px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      box-shadow: 0 2px 5px rgba(70, 38, 10, 0.16);
+      white-space: nowrap;
+    }
+
+    /* 木檯邊緣厚度 */
+    .table-edge {
+      height: 20px;
+      background: linear-gradient(180deg, #b3783d 0%, #8f5b28 100%);
+      border: 3px solid #78491d;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 6px 12px rgba(80, 45, 15, 0.22);
+    }
+
+    /* 餐檯四隻木腳 */
+    .table-legs {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 38px;
+      height: 52px;
+      position: relative;
+    }
+
+    .table-leg {
+      width: 24px;
+      height: 52px;
+      background: linear-gradient(90deg, #9c6530 0%, #7d4c1f 65%, #663c16 100%);
+      border-radius: 0 0 6px 6px;
+      box-shadow: 0 5px 8px rgba(70, 40, 12, 0.25);
+    }
+
+    .table-leg.inner-left,
+    .table-leg.inner-right {
+      height: 40px;
+      width: 18px;
+      opacity: 0.82;
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(45, 29, 20, 0.65);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 28px;
+      max-width: 490px;
+      width: 100%;
+      padding: 24px 26px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      position: relative;
+      animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .dish-ribbon {
+      display: inline-block;
+      background: #fff0d1;
+      color: #b56500;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 5px 14px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    .plate-showcase {
+      width: 240px;
+      height: 185px;
+      margin: 0 auto 8px;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+
+    .dish-title {
+      margin: 0 0 6px;
+      font-size: 1.5rem;
+      color: var(--text-main);
+    }
+
+    .dish-stars {
+      font-size: 1.3rem;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+
+    .dish-desc {
+      margin: 0 0 14px;
+      color: var(--text-sub);
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+
+    .edu-box {
+      background: #f2fbf9;
+      border: 2px solid #cbece6;
+      border-radius: 16px;
+      padding: 12px 14px;
+      text-align: left;
+      margin-bottom: 18px;
+    }
+
+    .edu-box h4 {
+      margin: 0 0 4px;
+      color: #1f6b62;
+      font-size: 0.92rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .edu-box p {
+      margin: 0;
+      font-size: 0.86rem;
+      color: #365955;
+      line-height: 1.5;
+    }
+
+    .btn-modal-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #ff7a3d 0%, #e25b1d 100%);
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 14px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(226, 91, 29, 0.3);
+    }
+
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px;
+      text-align: left;
+    }
+
+    .collection-item {
+      background: #fff9f2;
+      border: 1.5px solid #f0dfd1;
+      border-radius: 14px;
+      padding: 10px;
+      font-size: 0.85rem;
+    }
+
+    .collection-item strong {
+      display: block;
+      color: var(--primary-dark);
+      margin-bottom: 3px;
+    }
+
+    /* Keyframes */
+    @keyframes flickerOuter {
+      0% { transform: scaleY(0.92) scaleX(1.03); }
+      100% { transform: scaleY(1.08) scaleX(0.96); }
+    }
+    @keyframes flickerInner {
+      0% { transform: scaleY(1.05) skewX(-3deg); }
+      100% { transform: scaleY(0.9) skewX(3deg); }
+    }
+    @keyframes riseSteam {
+      0% { opacity: 0; transform: translateY(10px) scale(0.7); }
+      35% { opacity: 0.85; }
+      100% { opacity: 0; transform: translateY(-48px) scale(1.35); }
+    }
+    @keyframes bubblePop {
+      0% { opacity: 0; transform: translateY(8px) scale(0.5); }
+      50% { opacity: 0.9; }
+      100% { opacity: 0; transform: translateY(-22px) scale(1.1); }
+    }
+    @keyframes stirFryMotion {
+      0% { transform: rotate(-10deg) translate(-8px, 2px); }
+      100% { transform: rotate(14deg) translate(10px, -6px); }
+    }
+    @keyframes potShake {
+      0% { transform: translateY(0) rotate(0deg); }
+      30% { transform: translateY(-8px) rotate(-3deg); }
+      60% { transform: translateY(-4px) rotate(3deg); }
+      100% { transform: translateY(0) rotate(0deg); }
+    }
+    @keyframes serveSlideIn {
+      0% { opacity: 0; transform: scale(0.75) translateY(-16px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateY(25px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes floatUpDown {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+      .ingredients-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .methods-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .ingredients-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .methods-list {
+        grid-template-columns: 1fr;
+      }
+      .pot-svg {
+        width: 270px;
+        height: 250px;
+      }
+      .table-legs {
+        padding: 0 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-icon">👩‍🍳</div>
+      <div>
+        <h1>小小家政廚神｜互動烹飪及上菜教室</h1>
+        <p>揀食材、配烹法、開火煮食，煮好就用專屬嘅「碗」或「碟」擺上餐檯！</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-header" id="btnSound" title="開關音效">🔊 音效：開</button>
+      <button class="btn-header" id="btnBook">📖 我的食譜 (<span id="recipeCount">0</span>)</button>
+    </div>
+  </header>
+
+  <div class="page-container">
+    <main>
+      <!-- 左側：選擇材料 -->
+      <section class="panel">
+        <div class="panel-title">
+          <h2><span class="step-badge">步驟 1</span> 選擇材料</h2>
+          <span class="sub-hint">可選 1–3 種</span>
+        </div>
+        <div class="ingredients-grid" id="ingredientsGrid"></div>
+      </section>
+
+      <!-- 中央：煮食鍋與爐頭 -->
+      <section class="panel kitchen-stage" id="kitchenStage">
+        <div class="stage-status-bar">
+          <div class="selected-tray" id="selectedTray">
+            <span class="sub-hint">尚未放入食材...</span>
+          </div>
+          <div class="tool-badge" id="toolBadge">廚具：未選擇</div>
+        </div>
+
+        <div class="stove-wrapper" id="stoveWrapper" title="烹飪時點擊可攪拌或拋鑊！">
+          <div class="cooking-hint-bubble" id="cookingHint">🔥 烹飪中！點擊鍋子可攪拌／拋鑊加速！</div>
+
+          <svg class="pot-svg" viewBox="0 0 320 290" xmlns="http://www.w3.org/2000/svg">
+            <!-- 爐頭底座 -->
+            <rect x="45" y="242" width="230" height="32" rx="10" fill="#464d59" />
+            <rect x="60" y="236" width="200" height="10" rx="4" fill="#2d333b" />
+            <path d="M88 236 L102 222 L120 222 M232 236 L218 222 L200 222" stroke="#22262c" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <circle cx="90" cy="258" r="7" fill="#d9e0e8" />
+            <circle cx="230" cy="258" r="7" fill="#ff7a3d" />
+
+            <!-- 火焰動畫層 -->
+            <g class="flames-group" id="flamesGroup">
+              <path class="flame-outer" d="M110 236 C105 215, 125 205, 130 192 C136 205, 145 200, 150 185 C158 202, 168 188, 175 186 C182 204, 195 198, 200 212 C210 220, 212 230, 208 236 Z" fill="#ff6b22" />
+              <path class="flame-inner" d="M124 236 C122 220, 138 212, 143 200 C150 214, 160 198, 166 202 C174 214, 185 210, 194 236 Z" fill="#ffd23f" />
+              <path d="M138 236 C140 225, 150 222, 160 218 C170 222, 180 225, 182 236 Z" fill="#4cc9f0" opacity="0.85" />
+            </g>
+
+            <g id="cookwareLayer"></g>
+            <g id="potIngredientsLayer" class="pot-ingredients-layer"></g>
+            <g id="fxLayer"></g>
+          </svg>
+        </div>
+
+        <div class="stage-controls">
+          <div class="progress-wrap" id="progressWrap">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-reset" id="btnReset">🔄 清空重選</button>
+            <button class="btn-cook" id="btnCook" disabled>🔥 點火煮食！</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右側：選擇烹飪方法 -->
+      <section class="panel">
+        <div class="panel-title">
+          <h2><span class="step-badge" style="background: var(--secondary)">步驟 2</span> 烹飪方法</h2>
+          <span class="sub-hint">配合廚具</span>
+        </div>
+        <div class="methods-list" id="methodsList"></div>
+      </section>
+    </main>
+
+    <!-- 下方：畫出一張木餐檯，在檯上擺放煮好的餸菜 -->
+    <section class="dining-table-panel">
+      <div class="table-header">
+        <h2>🍽️ 開飯啦！餐檯上菜區（煮好一碟餸就會擺喺呢張檯）</h2>
+        <button class="btn-clear-table" id="btnClearTable">🧹 收拾餐檯</button>
+      </div>
+
+      <div class="drawn-table-scene">
+        <div class="table-top-surface">
+          <div class="table-runner"></div>
+          <div class="table-dishes-row" id="tableDishesRow">
+            <div class="table-empty-hint">
+              張檯仲係空嘅～快啲喺上面開火煮返碗「雲吞麵」或者炒碟「油雞／時蔬」擺上檯啦！
+            </div>
+          </div>
+        </div>
+        <div class="table-edge"></div>
+        <div class="table-legs">
+          <div class="table-leg left"></div>
+          <div class="table-leg inner-left"></div>
+          <div class="table-leg inner-right"></div>
+          <div class="table-leg right"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 成品上菜彈窗 -->
+  <div class="modal-backdrop" id="resultModal">
+    <div class="modal-card">
+      <div class="dish-ribbon" id="dishRibbon">🔔 叮！上菜啦！</div>
+      <div class="plate-showcase" id="plateShowcase"></div>
+      <h2 class="dish-title" id="dishTitle">美味佳餚</h2>
+      <div class="dish-stars" id="dishStars">⭐⭐⭐⭐⭐</div>
+      <p class="dish-desc" id="dishDesc"></p>
+      <div class="edu-box">
+        <h4>💡 家政小知識</h4>
+        <p id="dishEdu"></p>
+      </div>
+      <button class="btn-modal-primary" id="btnCloseResult">🍽️ 睇下餐檯上面碟餸！</button>
+    </div>
+  </div>
+
+  <!-- 食譜圖鑑彈窗 -->
+  <div class="modal-backdrop" id="bookModal">
+    <div class="modal-card">
+      <h2 class="dish-title">📖 我的家政食譜圖鑑</h2>
+      <p class="dish-desc">試下不同食材配「蒸、炒、煮、炸」，收集各種湯碗麵點與精美小菜！</p>
+      <div class="collection-grid" id="collectionGrid"></div>
+      <button class="btn-modal-primary" style="background: linear-gradient(135deg, #3ba99c 0%, #268277 100%);" id="btnCloseBook">返回廚房</button>
+    </div>
+  </div>
+
+  <script>
+    // ========= 1. 食材與烹飪方法資料 =========
+    const INGREDIENTS = [
+      { id: "chicken", name: "雞肉", emoji: "🍗", cat: "肉類" },
+      { id: "wonton", name: "雲吞", emoji: "🥟", cat: "點心類" },
+      { id: "noodle", name: "麵條", emoji: "🍜", cat: "澱粉類" },
+      { id: "egg", name: "雞蛋", emoji: "🥚", cat: "蛋白質" },
+      { id: "veggie", name: "青菜", emoji: "🥬", cat: "蔬菜類" },
+      { id: "pork", name: "豬肉", emoji: "🥩", cat: "肉類" },
+      { id: "fish", name: "鮮魚", emoji: "🐟", cat: "海鮮" },
+      { id: "shrimp", name: "鮮蝦", emoji: "🍤", cat: "海鮮" },
+      { id: "tofu", name: "豆腐", emoji: "🧈", cat: "豆製品" },
+      { id: "potato", name: "馬鈴薯", emoji: "🥔", cat: "根莖類" }
+    ];
+
+    const METHODS = [
+      {
+        id: "steam",
+        name: "蒸",
+        icon: "♨️",
+        tool: "竹蒸籠",
+        heat: "medium",
+        desc: "用蒸籠隔水蒸熟，再用深瓷碟上菜，原汁原味。",
+        eduTip: "「蒸」是最健康的烹調法之一！用蒸籠隔水蒸煮，不需額外加油，能最大程度保留維他命和食材鮮味。"
+      },
+      {
+        id: "stirfry",
+        name: "炒",
+        icon: "🍳",
+        tool: "中式炒鑊 + 鑊鏟",
+        heat: "high",
+        desc: "猛火快炒，煮好後用闊邊大碟上菜，鑊氣十足！",
+        eduTip: "「炒」講求猛火快炒！高溫快速翻炒能鎖住蔬菜與肉類的水分，保持爽脆口感，同時減少水溶性維他命流失。"
+      },
+      {
+        id: "boil",
+        name: "煮",
+        icon: "🍲",
+        tool: "深湯鍋 + 湯勺",
+        heat: "medium",
+        desc: "在湯鍋中滾煮湯麵或炆煮菜式，用大湯碗或深碟盛載！",
+        eduTip: "「煮」能讓食材軟化並使味道融合在湯汁中。水滾後可轉中小火慢煮，既省燃料又不易滾瀉。"
+      },
+      {
+        id: "fry",
+        name: "炸",
+        icon: "🍤",
+        tool: "油炸鍋 + 炸網",
+        heat: "high",
+        desc: "高溫油炸至金黃酥脆，用墊有吸油紙的餐碟上菜。",
+        eduTip: "「炸」能做出香脆口感，但食物容易吸收油脂。炸好後用炸網瀝油並墊吸油紙上菜，食得更健康！"
+      }
+    ];
+
+    const SPECIAL_RECIPES = {
+      "noodle_wonton_boil": {
+        name: "港式鮮蝦雲吞麵",
+        container: "bowl",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "一碗熱騰騰嘅大地魚清湯，浸住爽彈竹昇麵同皮薄餡靚嘅鮮蝦雲吞，用青花大碗上菜正到爆！",
+        edu: "煮雲吞麵要分開烚麵同煮雲吞，先將麵條「過冷河」再放回熱湯，麵條先至會爽口彈牙唔糊湯！"
+      },
+      "wonton_boil": {
+        name: "上湯鮮蝦淨雲吞",
+        container: "bowl",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "顆顆飽滿嘅雲吞喺滾燙上湯中浮起，撒上韭黃蔥花，成碗端上檯香氣撲鼻！",
+        edu: "煮雲吞時水滾後可加少許冷水「點水」一至兩次，令雲吞皮受熱均勻唔易穿破。"
+      },
+      "noodle_wonton_veggie_boil": {
+        name: "菜心鮮蝦雲吞麵",
+        container: "bowl",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "大碗湯麵加入翠綠青菜同彈牙雲吞，有菜有肉又有澱粉質，營養超均衡！",
+        edu: "食麵記得加配青菜，增加膳食纖維攝取，符合均衡飲食金字塔！"
+      },
+      "wonton_fry": {
+        name: "金黃脆炸錦鹵雲吞",
+        container: "fry_platter",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "雲吞炸到金黃鬆脆，咬落「咔嚓」聲，放上吸油紙拼盤配酸甜汁食一流！",
+        edu: "炸雲吞油溫唔好過高，保持中火慢慢炸至金黃，外皮先會起泡鬆脆而內餡又熟透。"
+      },
+      "chicken_boil": {
+        name: "阿媽秘製豉油油雞",
+        container: "steamed_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "雞肉喺豉油滷水汁中浸煮入味，斬件排好上碟再淋上油潤滷汁，皮滑肉嫩！",
+        edu: "整油雞嘅秘訣係「慢火浸熟」而唔係大火猛滾！熄火蓋上鍋蓋用餘溫浸熟，雞肉就會特別嫩滑多汁。"
+      },
+      "chicken_steam": {
+        name: "蔥油薑蓉蒸滑雞",
+        container: "steamed_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "雞肉用蒸籠大火蒸熟，鎖住鮮甜雞汁，用深碟裝住，連碟底雞汁撈飯食一流！",
+        edu: "蒸雞前用少許生粉、鹽同生抽醃勻，生粉可以喺肉表面形成保護膜，鎖住肉汁唔變柴。"
+      },
+      "chicken_fry": {
+        name: "黃金脆皮炸雞",
+        container: "fry_platter",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "外皮金黃酥脆、咬開肉汁豐富，用吸油紙餐碟上菜，香氣滿屋！",
+        edu: "炸雞件時記得確保中心溫度達 75°C 以上先至完全熟透，食得安全又放心。"
+      },
+      "chicken_potato_boil": {
+        name: "家常薯仔炆雞",
+        container: "bowl",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "馬鈴薯吸飽香濃雞汁變得粉糯，雞肉入味，用大碗盛載熱辣辣擺上檯！",
+        edu: "馬鈴薯含豐富碳水化合物同鉀質，同雞肉一齊炆煮，澱粉仲可以令醬汁自然變濃稠。"
+      },
+      "egg_steam": {
+        name: "滑溜芙蓉蒸水蛋",
+        container: "steamed_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "蛋液加入溫水打勻蒸熟，表面如鏡子般光滑，成碟端出滑溜彈牙！",
+        edu: "蒸水蛋嘅秘訣係蛋與水比例約 1:1.5，過篩後蓋上碟子再蒸，就能避免倒汗水滴落整出蜂窩。"
+      },
+      "fish_steam": {
+        name: "清蒸海上鮮",
+        container: "steamed_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "鮮魚經蒸籠蒸熟，放上蒸碟再鋪滿蔥絲灒熟油豉油，鮮甜無比！",
+        edu: "蒸魚要「水滾落鑊」，魚肉表面迅速受熱收縮鎖住肉汁；魚眼微微凸起代表剛熟透。"
+      },
+      "egg_veggie_stirfry": {
+        name: "翠綠時蔬炒滑蛋",
+        container: "stirfry_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "青菜爽脆搭配金黃炒蛋，用大炒碟盛載色澤誘人，家政課必學名菜！",
+        edu: "炒青菜加少許油與鹽能令葉綠素更穩定翠綠；炒蛋八成熟離火，餘溫會令雞蛋更滑嫩。"
+      },
+      "egg_shrimp_stirfry": {
+        name: "經典滑蛋炒蝦仁",
+        container: "stirfry_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "爽口鮮蝦仁裹滿嫩滑炒蛋，炒好裝上圓碟油亮亮，送飯一流！",
+        edu: "蝦仁富含優質蛋白質，炒之前先印乾水分快手兜炒，口感最爽彈。"
+      },
+      "noodle_pork_stirfry": {
+        name: "惹味肉絲炒麵",
+        container: "stirfry_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "豬肉絲配麵條猛火兜炒，裝上大碟鑊氣十足，香噴噴！",
+        edu: "做炒麵前先把麵條烚熟並過冷水瀝乾，落鑊炒先至條條分明唔黏底。"
+      },
+      "veggie_stirfry": {
+        name: "蒜蓉猛火炒時蔬",
+        container: "stirfry_plate",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "青菜快手炒熟即刻上碟，保持鮮綠爽脆，清甜不膩。",
+        edu: "蔬菜含豐富膳食纖維與維他命 C，猛火快炒可縮短加熱時間，減少營養流失。"
+      },
+      "fish_tofu_boil": {
+        name: "奶白魚湯滾豆腐",
+        container: "bowl",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "鮮魚熬出奶白濃湯配嫩滑豆腐，用大湯碗端出來暖胃又補鈣！",
+        edu: "煮奶白色魚湯秘訣係「先煎香魚身再加滾水」並保持大火滾煮，令脂肪乳化成細小奶白油滴。"
+      },
+      "egg_noodle_veggie_boil": {
+        name: "元氣青菜雞蛋湯麵",
+        container: "bowl",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "大碗熱湯麵配上嫩蛋與翠綠青菜，營養均衡又滿足！",
+        edu: "一碗健康湯麵包含碳水化合物（麵條）、蛋白質（蛋）同蔬菜（青菜），非常均衡！"
+      },
+      "potato_fry": {
+        name: "金黃香脆炸薯條",
+        container: "fry_platter",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "馬鈴薯切條炸至金黃酥脆，放上吸油紙拼盤配番茄醬上菜！",
+        edu: "炸薯條想更酥脆，可先中溫炸熟定型，撈起後升高油溫再「復炸」約 30 秒。"
+      },
+      "tofu_fry": {
+        name: "黃金脆皮炸豆腐",
+        container: "fry_platter",
+        stars: "⭐⭐⭐⭐⭐",
+        desc: "豆腐外層炸出金黃脆殼，咬開裡面依然雪白嫩滑！",
+        edu: "豆腐含水量高，下油鍋前必須用廚房紙印乾水分，否則熱油遇水會彈油，安全第一！"
+      }
+    };
+
+    // ========= 2. 遊戲狀態 =========
+    const state = {
+      selectedIngredients: [],
+      selectedMethod: null,
+      isCooking: false,
+      progress: 0,
+      soundEnabled: true,
+      discoveredDishes: [],
+      servedTableDishes: []
+    };
+
+    // ========= 3. Web Audio 音效合成器 =========
+    const SoundFX = (() => {
+      let ctx = null;
+      function getCtx() {
+        if (!ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) ctx = new AudioCtx();
+        }
+        if (ctx && ctx.state === "suspended") ctx.resume();
+        return ctx;
+      }
+
+      function playClick() {
+        if (!state.soundEnabled) return;
+        const c = getCtx();
+        if (!c) return;
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(520, c.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(760, c.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.12, c.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.09);
+        osc.connect(gain).connect(c.destination);
+        osc.start();
+        osc.stop(c.currentTime + 0.09);
+      }
+
+      function playIgnite() {
+        if (!state.soundEnabled) return;
+        const c = getCtx();
+        if (!c) return;
+        const bufferSize = c.sampleRate * 0.28;
+        const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (c.sampleRate * 0.1));
+        }
+        const noise = c.createBufferSource();
+        noise.buffer = buffer;
+        const filter = c.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 600;
+        const gain = c.createGain();
+        gain.gain.value = 0.24;
+        noise.connect(filter).connect(gain).connect(c.destination);
+        noise.start();
+      }
+
+      function playStir() {
+        if (!state.soundEnabled) return;
+        const c = getCtx();
+        if (!c) return;
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(280, c.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(420, c.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.12, c.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.1);
+        osc.connect(gain).connect(c.destination);
+        osc.start();
+        osc.stop(c.currentTime + 0.1);
+      }
+
+      function playDone() {
+        if (!state.soundEnabled) return;
+        const c = getCtx();
+        if (!c) return;
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = "sine";
+          const start = c.currentTime + idx * 0.09;
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0.14, start);
+          gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+          osc.connect(gain).connect(c.destination);
+          osc.start(start);
+          osc.stop(start + 0.36);
+        });
+      }
+
+      return { playClick, playIgnite, playStir, playDone };
+    })();
+
+    // ========= 4. DOM 參照 =========
+    const ingredientsGrid = document.getElementById("ingredientsGrid");
+    const methodsList = document.getElementById("methodsList");
+    const selectedTray = document.getElementById("selectedTray");
+    const toolBadge = document.getElementById("toolBadge");
+    const cookwareLayer = document.getElementById("cookwareLayer");
+    const potIngredientsLayer = document.getElementById("potIngredientsLayer");
+    const fxLayer = document.getElementById("fxLayer");
+    const stoveWrapper = document.getElementById("stoveWrapper");
+    const kitchenStage = document.getElementById("kitchenStage");
+    const cookingHint = document.getElementById("cookingHint");
+    const btnCook = document.getElementById("btnCook");
+    const btnReset = document.getElementById("btnReset");
+    const progressWrap = document.getElementById("progressWrap");
+    const progressFill = document.getElementById("progressFill");
+    const btnSound = document.getElementById("btnSound");
+    const btnBook = document.getElementById("btnBook");
+    const recipeCount = document.getElementById("recipeCount");
+    const tableDishesRow = document.getElementById("tableDishesRow");
+    const btnClearTable = document.getElementById("btnClearTable");
+
+    const resultModal = document.getElementById("resultModal");
+    const plateShowcase = document.getElementById("plateShowcase");
+    const dishTitle = document.getElementById("dishTitle");
+    const dishStars = document.getElementById("dishStars");
+    const dishDesc = document.getElementById("dishDesc");
+    const dishEdu = document.getElementById("dishEdu");
+    const dishRibbon = document.getElementById("dishRibbon");
+    const btnCloseResult = document.getElementById("btnCloseResult");
+    const bookModal = document.getElementById("bookModal");
+    const collectionGrid = document.getElementById("collectionGrid");
+    const btnCloseBook = document.getElementById("btnCloseBook");
+
+    // ========= 5. 渲染介面與動態鍋具 =========
+    function renderIngredients() {
+      ingredientsGrid.innerHTML = INGREDIENTS.map(item => {
+        const isSelected = state.selectedIngredients.includes(item.id);
+        return `
+          <div class="item-card ${isSelected ? "selected" : ""}" data-id="${item.id}">
+            <div class="item-emoji">${item.emoji}</div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-cat">${item.cat}</div>
+          </div>
+        `;
+      }).join("");
+
+      ingredientsGrid.querySelectorAll(".item-card").forEach(card => {
+        card.addEventListener("click", () => toggleIngredient(card.dataset.id));
+      });
+    }
+
+    function renderMethods() {
+      methodsList.innerHTML = METHODS.map(m => {
+        const isSelected = state.selectedMethod === m.id;
+        return `
+          <div class="method-card ${isSelected ? "selected" : ""}" data-id="${m.id}">
+            <div class="method-icon">${m.icon}</div>
+            <div class="method-info">
+              <h3>${m.name} <span class="method-tool-tag">${m.tool}</span></h3>
+              <p>${m.desc}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      methodsList.querySelectorAll(".method-card").forEach(card => {
+        card.addEventListener("click", () => selectMethod(card.dataset.id));
+      });
+    }
+
+    function renderCookware() {
+      const m = state.selectedMethod || "default";
+      let svg = "";
+      let fx = "";
+
+      if (m === "steam") {
+        svg = `
+          <path d="M85 170 L235 170 L225 220 C223 226, 215 230, 205 230 L115 230 C105 230, 97 226, 95 220 Z" fill="#b9c3cf" stroke="#7d8a99" stroke-width="3"/>
+          <path d="M85 182 Q70 182 70 192 Q70 202 88 202" fill="none" stroke="#64707d" stroke-width="5" stroke-linecap="round"/>
+          <path d="M235 182 Q250 182 250 192 Q250 202 232 202" fill="none" stroke="#64707d" stroke-width="5" stroke-linecap="round"/>
+          <rect x="82" y="122" width="156" height="50" rx="6" fill="#deb075" stroke="#b07f45" stroke-width="3"/>
+          <line x1="82" y1="138" x2="238" y2="138" stroke="#c49154" stroke-width="3"/>
+          <line x1="82" y1="156" x2="238" y2="156" stroke="#c49154" stroke-width="3"/>
+          <path d="M80 122 C88 94, 232 94, 240 122 Z" fill="#cfa063" stroke="#a6753b" stroke-width="3"/>
+          <rect x="148" y="88" width="24" height="10" rx="5" fill="#9c6a32"/>
+        `;
+        fx = `
+          <circle class="steam-puff" cx="130" cy="82" r="14" fill="white" />
+          <circle class="steam-puff delay-1" cx="162" cy="70" r="18" fill="white" />
+          <circle class="steam-puff delay-2" cx="192" cy="84" r="13" fill="white" />
+        `;
+      } else if (m === "stirfry") {
+        svg = `
+          <path d="M78 178 L22 158 C16 156, 14 166, 20 169 L75 188 Z" fill="#8b5a2b" stroke="#5e3a18" stroke-width="2.5"/>
+          <path d="M70 165 C75 232, 245 232, 250 165 Z" fill="#3a404a" stroke="#22262e" stroke-width="3"/>
+          <ellipse cx="160" cy="165" rx="90" ry="16" fill="#525a66" stroke="#22262e" stroke-width="3"/>
+          <ellipse cx="160" cy="167" rx="80" ry="11" fill="#2c313a"/>
+          <g class="spatula-group">
+            <line x1="185" y1="164" x2="245" y2="75" stroke="#b8c4d0" stroke-width="5" stroke-linecap="round"/>
+            <rect x="235" y="65" width="22" height="10" rx="4" transform="rotate(-55 245 75)" fill="#d67f36"/>
+            <path d="M174 168 L194 168 L190 154 L178 154 Z" fill="#cfd8e3" stroke="#8592a1" stroke-width="1.5"/>
+          </g>
+        `;
+        fx = `
+          <circle class="steam-puff" cx="140" cy="122" r="10" fill="#fff5e6" />
+          <circle class="steam-puff delay-1" cx="178" cy="112" r="13" fill="#fff5e6" />
+          <circle class="bubble-dot" cx="135" cy="160" r="4" fill="#ffb703" />
+          <circle class="bubble-dot b2" cx="165" cy="158" r="5" fill="#fb8500" />
+          <circle class="bubble-dot b3" cx="190" cy="162" r="4" fill="#ffb703" />
+        `;
+      } else if (m === "fry") {
+        svg = `
+          <path d="M88 148 L232 148 L224 218 C222 226, 212 230, 202 230 L118 230 C108 230, 98 226, 96 218 Z" fill="#cfd6de" stroke="#808b96" stroke-width="3"/>
+          <path d="M88 164 Q72 164 72 174 Q72 184 90 184" fill="none" stroke="#5d6770" stroke-width="5" stroke-linecap="round"/>
+          <path d="M232 164 Q248 164 248 174 Q248 184 230 184" fill="none" stroke="#5d6770" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="160" cy="148" rx="72" ry="12" fill="#e5ecf2" stroke="#808b96" stroke-width="2.5"/>
+          <ellipse cx="160" cy="152" rx="64" ry="9" fill="#ffb703"/>
+          <g class="spatula-group">
+            <line x1="205" y1="145" x2="265" y2="85" stroke="#6c757d" stroke-width="5" stroke-linecap="round"/>
+            <path d="M122 142 L198 142 L190 170 L130 170 Z" fill="rgba(255,255,255,0.25)" stroke="#7a848e" stroke-width="2.5" stroke-dasharray="4 3"/>
+          </g>
+        `;
+        fx = `
+          <circle class="bubble-dot" cx="132" cy="146" r="5" fill="#ffd166" />
+          <circle class="bubble-dot b2" cx="160" cy="144" r="6" fill="#fff3b0" />
+          <circle class="bubble-dot b3" cx="185" cy="147" r="5" fill="#ffd166" />
+          <circle class="steam-puff" cx="155" cy="105" r="12" fill="#fff3d6" />
+        `;
+      } else {
+        const isBoil = m === "boil";
+        svg = `
+          <path d="M84 146 L236 146 L226 218 C224 226, 214 230, 204 230 L116 230 C106 230, 96 226, 94 218 Z" fill="#dfe6ee" stroke="#8693a1" stroke-width="3"/>
+          <path d="M84 162 Q66 162 66 174 Q66 186 86 186" fill="none" stroke="#5e6a75" stroke-width="5" stroke-linecap="round"/>
+          <path d="M236 162 Q254 162 254 174 Q254 186 234 186" fill="none" stroke="#5e6a75" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="160" cy="146" rx="76" ry="13" fill="#eef4f8" stroke="#8693a1" stroke-width="3"/>
+          <ellipse cx="160" cy="148" rx="68" ry="9" fill="${isBoil ? '#90e0ef' : '#ced8e0'}"/>
+          ${isBoil ? `
+            <g class="spatula-group">
+              <line x1="175" y1="145" x2="225" y2="72" stroke="#b0bac5" stroke-width="5" stroke-linecap="round"/>
+              <ellipse cx="172" cy="148" rx="14" ry="7" fill="#c7d1dc" stroke="#7d8996" stroke-width="2"/>
+            </g>
+          ` : ""}
+        `;
+        fx = `
+          <circle class="bubble-dot" cx="130" cy="145" r="5" fill="#ffffff" />
+          <circle class="bubble-dot b2" cx="162" cy="143" r="6" fill="#ffffff" />
+          <circle class="bubble-dot b3" cx="192" cy="146" r="4" fill="#ffffff" />
+          <circle class="steam-puff" cx="140" cy="108" r="13" fill="white" />
+          <circle class="steam-puff delay-1" cx="178" cy="100" r="15" fill="white" />
+        `;
+      }
+
+      cookwareLayer.innerHTML = svg;
+      fxLayer.innerHTML = fx;
+    }
+
+    function renderPotIngredients() {
+      const items = state.selectedIngredients.map(id => INGREDIENTS.find(i => i.id === id));
+      const m = state.selectedMethod;
+      const baseY = m === "steam" ? 130 : m === "stirfry" ? 168 : 150;
+      const positions = [
+        [{ x: 160, y: baseY }],
+        [{ x: 138, y: baseY }, { x: 182, y: baseY }],
+        [{ x: 126, y: baseY + 2 }, { x: 160, y: baseY - 5 }, { x: 194, y: baseY + 2 }]
+      ];
+
+      if (items.length === 0) {
+        potIngredientsLayer.innerHTML = "";
+        return;
+      }
+
+      const coords = positions[items.length - 1];
+      potIngredientsLayer.innerHTML = items.map((item, idx) => `
+        <text x="${coords[idx].x}" y="${coords[idx].y}" opacity="${m === 'steam' && state.isCooking ? 0.65 : 1}">
+          ${item.emoji}
+        </text>
+      `).join("");
+    }
+
+    function updateStageUI() {
+      if (state.selectedIngredients.length === 0) {
+        selectedTray.innerHTML = `<span class="sub-hint">👈 請先選擇 1 至 3 種食材</span>`;
+      } else {
+        selectedTray.innerHTML = state.selectedIngredients.map(id => {
+          const item = INGREDIENTS.find(i => i.id === id);
+          return `<span class="tray-pill">${item.emoji} ${item.name}</span>`;
+        }).join("");
+      }
+
+      const methodObj = METHODS.find(m => m.id === state.selectedMethod);
+      if (methodObj) {
+        toolBadge.textContent = `廚具：${methodObj.tool}`;
+        stoveWrapper.classList.toggle("is-high-heat", methodObj.heat === "high");
+      } else {
+        toolBadge.textContent = "廚具：未選擇";
+        stoveWrapper.classList.remove("is-high-heat");
+      }
+
+      const ready = state.selectedIngredients.length > 0 && state.selectedMethod && !state.isCooking;
+      btnCook.disabled = !ready;
+      btnReset.disabled = state.isCooking || (state.selectedIngredients.length === 0 && !state.selectedMethod);
+
+      renderCookware();
+      renderPotIngredients();
+    }
+
+    // ========= 6. 互動邏輯 =========
+    function toggleIngredient(id) {
+      if (state.isCooking) return;
+      SoundFX.playClick();
+      const idx = state.selectedIngredients.indexOf(id);
+      if (idx > -1) {
+        state.selectedIngredients.splice(idx, 1);
+      } else {
+        if (state.selectedIngredients.length >= 3) {
+          state.selectedIngredients.shift();
+        }
+        state.selectedIngredients.push(id);
+      }
+      renderIngredients();
+      updateStageUI();
+    }
+
+    function selectMethod(id) {
+      if (state.isCooking) return;
+      SoundFX.playClick();
+      state.selectedMethod = id;
+      renderMethods();
+      updateStageUI();
+    }
+
+    function resetAll() {
+      if (state.isCooking) return;
+      SoundFX.playClick();
+      state.selectedIngredients = [];
+      state.selectedMethod = null;
+      renderIngredients();
+      renderMethods();
+      updateStageUI();
+    }
+
+    let cookTimer = null;
+
+    function startCooking() {
+      if (state.isCooking || state.selectedIngredients.length === 0 || !state.selectedMethod) return;
+
+      state.isCooking = true;
+      state.progress = 0;
+      SoundFX.playIgnite();
+
+      kitchenStage.classList.add("is-cooking");
+      cookingHint.classList.add("visible");
+      progressWrap.classList.add("active");
+      progressFill.style.width = "0%";
+      btnCook.disabled = true;
+      btnReset.disabled = true;
+      btnCook.textContent = "🔥 猛火烹飪中...";
+
+      renderPotIngredients();
+
+      cookTimer = setInterval(() => {
+        state.progress += 2.8;
+        progressFill.style.width = `${Math.min(100, state.progress)}%`;
+
+        if (state.progress >= 100) {
+          clearInterval(cookTimer);
+          finishCooking();
+        }
+      }, 100);
+    }
+
+    stoveWrapper.addEventListener("click", () => {
+      if (!state.isCooking) return;
+      SoundFX.playStir();
+      stoveWrapper.classList.remove("stirring");
+      void stoveWrapper.offsetWidth;
+      stoveWrapper.classList.add("stirring");
+      state.progress = Math.min(100, state.progress + 12);
+      progressFill.style.width = `${state.progress}%`;
+    });
+
+    function finishCooking() {
+      state.isCooking = false;
+      kitchenStage.classList.remove("is-cooking");
+      cookingHint.classList.remove("visible");
+      progressWrap.classList.remove("active");
+      btnCook.textContent = "🔥 點火煮食！";
+      SoundFX.playDone();
+
+      const dish = generateDish(state.selectedIngredients, state.selectedMethod);
+      saveToCollection(dish);
+      // 煮好即刻擺上餐檯！
+      serveDishToTable(dish);
+      showResultModal(dish, true);
+      updateStageUI();
+    }
+
+    // ========= 7. 菜式生成 & 專屬碗/碟上菜 SVG =========
+    function getContainerInfo(containerType) {
+      const map = {
+        bowl: { label: "🍲 青花大湯碗上菜" },
+        stirfry_plate: { label: "🍽️ 中式炒菜碟上菜" },
+        steamed_plate: { label: "🥘 深底蒸餸碟上菜" },
+        fry_platter: { label: "🍟 吸油紙炸物碟上菜" }
+      };
+      return map[containerType] || map.stirfry_plate;
+    }
+
+    function generateDish(ingIds, methodId) {
+      const sorted = [...ingIds].sort();
+      const key = `${sorted.join("_")}_${methodId}`;
+      const methodObj = METHODS.find(m => m.id === methodId);
+      const ingObjs = ingIds.map(id => INGREDIENTS.find(i => i.id === id));
+      const ingNames = ingObjs.map(i => i.name);
+
+      if (SPECIAL_RECIPES[key]) {
+        const sp = SPECIAL_RECIPES[key];
+        return {
+          key,
+          isSpecial: true,
+          container: sp.container,
+          name: sp.name,
+          stars: sp.stars,
+          desc: sp.desc,
+          edu: sp.edu,
+          method: methodObj,
+          ingredients: ingObjs
+        };
+      }
+
+      let container = "stirfry_plate";
+      if (methodId === "boil") container = "bowl";
+      else if (methodId === "steam") container = "steamed_plate";
+      else if (methodId === "fry") container = "fry_platter";
+
+      const methodAdjectives = {
+        steam: ["清蒸", "原汁蒸", "蔥油蒸"],
+        stirfry: ["香炒", "家常小炒", "猛火炒"],
+        boil: ["滾湯", "鮮味湯煮", "上湯"],
+        fry: ["金黃脆炸", "香酥炸", "黃金脆皮"]
+      };
+      const adj = methodAdjectives[methodId][ingIds.length % 3];
+      const combinedName = `${adj}${ingNames.join("")}`;
+      const containerText =
+        container === "bowl" ? "用大湯碗連湯連料熱辣辣擺上檯" :
+        container === "fry_platter" ? "放上鋪好吸油紙嘅餐碟擺上檯" :
+        "用靚靚瓷碟擺好盤端上檯";
+
+      return {
+        key,
+        isSpecial: false,
+        container,
+        name: combinedName,
+        stars: ingIds.length >= 2 ? "⭐⭐⭐⭐⭐" : "⭐⭐⭐⭐",
+        desc: `你成功用「${methodObj.tool}」以「${methodObj.name}」法煮好「${combinedName}」，並${containerText}！`,
+        edu: methodObj.eduTip,
+        method: methodObj,
+        ingredients: ingObjs
+      };
+    }
+
+    function renderPlatedDishSVG(dish) {
+      const c = dish.container;
+      const ingIds = dish.ingredients.map(i => i.id);
+      const emojis = dish.ingredients.map(i => i.emoji);
+      const hasNoodle = ingIds.includes("noodle");
+      const hasFish = ingIds.includes("fish");
+      const hasTofu = ingIds.includes("tofu");
+
+      const placeIngredients = (centerX, centerY, spread = 30, size = 34) => {
+        return emojis.map((em, i) => {
+          const offsetX = (i - (emojis.length - 1) / 2) * spread;
+          const offsetY = emojis.length === 3 && i === 1 ? -10 : (i % 2 === 0 ? 2 : -4);
+          return `<text x="${centerX + offsetX}" y="${centerY + offsetY}" font-size="${size}" text-anchor="middle">${em}</text>`;
+        }).join("");
+      };
+
+      if (c === "bowl") {
+        const brothColor = (hasFish && hasTofu) ? "#fbf5e6" : "#f5c26b";
+        const noodleLines = hasNoodle ? `
+          <path d="M68 92 Q90 80, 112 94 T156 90 T182 95" stroke="#ffd86b" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+          <path d="M74 102 Q96 92, 120 104 T165 99" stroke="#f5c74c" stroke-width="5" fill="none" stroke-linecap="round"/>
+        ` : "";
+
+        return `
+          <svg viewBox="0 0 240 185" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <path d="M84 150 L90 160 L150 160 L156 150 Z" fill="#e8eef5" stroke="#9ab0c7" stroke-width="2"/>
+            <path d="M40 88 C42 145, 76 154, 120 154 C164 154, 198 145, 200 88 Z" fill="#ffffff" stroke="#85a1bd" stroke-width="2.5"/>
+            <path d="M52 108 Q86 122, 120 118 Q154 122, 188 108" stroke="#4a7bb0" stroke-width="3" fill="none" stroke-dasharray="8 5" opacity="0.75"/>
+            <path d="M62 126 Q120 142, 178 126" stroke="#4a7bb0" stroke-width="2" fill="none" opacity="0.5"/>
+            <ellipse cx="120" cy="88" rx="80" ry="28" fill="#ffffff" stroke="#7693b0" stroke-width="3"/>
+            <ellipse cx="120" cy="91" rx="71" ry="22" fill="${brothColor}" stroke="#e0a94f" stroke-width="1.5"/>
+            ${noodleLines}
+            ${placeIngredients(116, 94, 34, 34)}
+            <circle cx="88" cy="84" r="3" fill="#4ea854"/>
+            <circle cx="144" cy="82" r="3" fill="#4ea854"/>
+            <circle cx="122" cy="104" r="2.5" fill="#4ea854"/>
+            <path d="M168 95 L205 58 C210 53, 217 60, 211 65 L176 99" fill="#f7fafc" stroke="#7693b0" stroke-width="2"/>
+            <ellipse cx="166" cy="98" rx="11" ry="7" transform="rotate(-20 166 98)" fill="#ffffff" stroke="#7693b0" stroke-width="2"/>
+            <path d="M88 48 Q95 36 87 24" stroke="#ff9a62" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M120 42 Q127 30 119 18" stroke="#ff9a62" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M150 48 Q157 36 149 24" stroke="#ff9a62" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+          </svg>
+        `;
+      }
+
+      if (c === "fry_platter") {
+        return `
+          <svg viewBox="0 0 240 185" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="118" cy="116" rx="95" ry="42" fill="#ffffff" stroke="#d9cfc4" stroke-width="3"/>
+            <ellipse cx="118" cy="116" rx="76" ry="31" fill="#f7f1e8"/>
+            <path d="M58 110 Q118 82, 174 110 Q145 142, 85 138 Z" fill="#fff7d6" stroke="#f0d27a" stroke-width="2" stroke-dasharray="5 3"/>
+            <ellipse cx="115" cy="114" rx="45" ry="18" fill="#ffb703" opacity="0.45"/>
+            ${placeIngredients(114, 114, 34, 36)}
+            <text x="68" y="122" font-size="22">🍋</text>
+            <ellipse cx="195" cy="136" rx="22" ry="11" fill="#ffffff" stroke="#d0c6bc" stroke-width="2"/>
+            <ellipse cx="195" cy="136" rx="16" ry="7" fill="#e63946"/>
+            <path d="M96 60 Q103 48 95 36" stroke="#ffb703" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+            <path d="M132 58 Q139 46 131 34" stroke="#ffb703" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+          </svg>
+        `;
+      }
+
+      if (c === "steamed_plate") {
+        const sauceColor = ingIds.includes("egg") && ingIds.length === 1 ? "#ffd86b" : "#c68b45";
+        return `
+          <svg viewBox="0 0 240 185" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="120" cy="116" rx="96" ry="42" fill="#ffffff" stroke="#b9cbd9" stroke-width="3"/>
+            <ellipse cx="120" cy="116" rx="82" ry="33" fill="none" stroke="#6c91b5" stroke-width="2" stroke-dasharray="6 4" opacity="0.6"/>
+            <ellipse cx="120" cy="118" rx="68" ry="26" fill="${sauceColor}" opacity="0.82"/>
+            ${placeIngredients(120, 118, 34, 38)}
+            <path d="M88 106 Q105 100 116 108" stroke="#52b788" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M126 125 Q142 120 155 127" stroke="#52b788" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <path d="M90 54 Q97 41 89 28" stroke="#8ecae6" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.75"/>
+            <path d="M120 48 Q127 35 119 22" stroke="#8ecae6" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.75"/>
+            <path d="M150 54 Q157 41 149 28" stroke="#8ecae6" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.75"/>
+          </svg>
+        `;
+      }
+
+      return `
+        <svg viewBox="0 0 240 185" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="116" cy="116" rx="92" ry="42" fill="#ffffff" stroke="#dfcbb8" stroke-width="3"/>
+          <ellipse cx="116" cy="116" rx="79" ry="34" fill="none" stroke="#e07a5f" stroke-width="2.5" opacity="0.7"/>
+          <ellipse cx="116" cy="118" rx="64" ry="26" fill="#f7c88a" opacity="0.65"/>
+          ${placeIngredients(116, 117, 33, 37)}
+          <circle cx="80" cy="108" r="3" fill="#e63946"/>
+          <circle cx="148" cy="122" r="3" fill="#4ea854"/>
+          <circle cx="136" cy="100" r="2.8" fill="#4ea854"/>
+          <line x1="175" y1="152" x2="225" y2="85" stroke="#9c6644" stroke-width="4" stroke-linecap="round"/>
+          <line x1="185" y1="156" x2="233" y2="90" stroke="#7f5539" stroke-width="4" stroke-linecap="round"/>
+          <path d="M88 55 Q95 43 87 31" stroke="#ff9f68" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+          <path d="M124 49 Q131 37 123 25" stroke="#ff9f68" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.7"/>
+        </svg>
+      `;
+    }
+
+    function showResultModal(dish, isFreshCook = false) {
+      const cInfo = getContainerInfo(dish.container);
+      dishRibbon.textContent = dish.isSpecial
+        ? `🌟 經典名菜出爐｜${cInfo.label}`
+        : `🔔 叮！煮好啦｜${cInfo.label}`;
+      plateShowcase.innerHTML = renderPlatedDishSVG(dish);
+      dishTitle.textContent = dish.name;
+      dishStars.textContent = dish.stars;
+      dishDesc.textContent = dish.desc;
+      dishEdu.textContent = dish.edu;
+      btnCloseResult.textContent = isFreshCook ? "🍽️ 擺上餐檯，繼續煮！" : "👍 返回餐檯";
+      resultModal.classList.add("open");
+    }
+
+    function serveDishToTable(dish) {
+      state.servedTableDishes.unshift(dish);
+      renderDiningTable();
+    }
+
+    function renderDiningTable() {
+      if (state.servedTableDishes.length === 0) {
+        tableDishesRow.innerHTML = `
+          <div class="table-empty-hint">
+            張檯仲係空嘅～快啲喺上面開火煮返碗「雲吞麵」或者炒碟「油雞／時蔬」擺上檯啦！
+          </div>
+        `;
+        return;
+      }
+
+      tableDishesRow.innerHTML = state.servedTableDishes.map((dish, index) => `
+        <div class="table-dish-item" data-idx="${index}" title="點擊查看「${dish.name}」做法與家政知識">
+          <div class="table-dish-svg">${renderPlatedDishSVG(dish)}</div>
+          <div class="table-dish-label">${dish.name}</div>
+        </div>
+      `).join("");
+
+      tableDishesRow.querySelectorAll(".table-dish-item").forEach(item => {
+        item.addEventListener("click", () => {
+          SoundFX.playClick();
+          const dish = state.servedTableDishes[Number(item.dataset.idx)];
+          showResultModal(dish, false);
+        });
+      });
+    }
+
+    function saveToCollection(dish) {
+      if (!state.discoveredDishes.some(d => d.key === dish.key)) {
+        state.discoveredDishes.unshift({
+          key: dish.key,
+          name: dish.name,
+          methodName: dish.method.name,
+          containerLabel: getContainerInfo(dish.container).label,
+          emojis: dish.ingredients.map(i => i.emoji).join(" ")
+        });
+        recipeCount.textContent = state.discoveredDishes.length;
+      }
+    }
+
+    function openRecipeBook() {
+      SoundFX.playClick();
+      if (state.discoveredDishes.length === 0) {
+        collectionGrid.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: #8c7a7c;">還沒有煮出任何菜式，快去廚房試試看吧！</p>`;
+      } else {
+        collectionGrid.innerHTML = state.discoveredDishes.map(d => `
+          <div class="collection-item">
+            <strong>${d.name}</strong>
+            <span>${d.emojis} ｜ ${d.containerLabel}</span>
+          </div>
+        `).join("");
+      }
+      bookModal.classList.add("open");
+    }
+
+    // ========= 8. 事件綁定與初始化 =========
+    btnCook.addEventListener("click", startCooking);
+    btnReset.addEventListener("click", resetAll);
+
+    btnCloseResult.addEventListener("click", () => {
+      SoundFX.playClick();
+      resultModal.classList.remove("open");
+    });
+
+    btnClearTable.addEventListener("click", () => {
+      SoundFX.playClick();
+      state.servedTableDishes = [];
+      renderDiningTable();
+    });
+
+    btnBook.addEventListener("click", openRecipeBook);
+    btnCloseBook.addEventListener("click", () => {
+      SoundFX.playClick();
+      bookModal.classList.remove("open");
+    });
+
+    btnSound.addEventListener("click", () => {
+      state.soundEnabled = !state.soundEnabled;
+      btnSound.textContent = state.soundEnabled ? "🔊 音效：開" : "🔇 音效：關";
+      if (state.soundEnabled) SoundFX.playClick();
+    });
+
+    [resultModal, bookModal].forEach(modal => {
+      modal.addEventListener("click", e => {
+        if (e.target === modal) modal.classList.remove("open");
+      });
+    });
+
+    renderIngredients();
+    renderMethods();
+    updateStageUI();
+    renderDiningTable();
+  </script>
+</body>
+</html>

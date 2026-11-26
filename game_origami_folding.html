@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>和紙工坊 — 互動摺紙遊戲</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: #fffdf9;
+      --ink: #3a322c;
+      --muted: #7c7168;
+      --accent: #d96b43;
+      --accent-soft: #fae5dc;
+      --dashed-color: #d9534f;
+      --solid-color: #2b6cb0;
+      --border: #e5ddd0;
+      --paper-front: #fcfaf4;
+      --paper-back: #efe8d8;
+      --paper-stroke: #c8beae;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: radial-gradient(circle at top left, #faf6ee, #ece4d5);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: rgba(255, 253, 249, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-badge {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      box-shadow: 0 3px 8px rgba(217, 107, 67, 0.25);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.04em;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .paper-colors {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f5f0e6;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .color-dot:hover {
+      transform: scale(1.15);
+    }
+
+    .color-dot.active {
+      box-shadow: 0 0 0 2px var(--accent);
+      transform: scale(1.1);
+    }
+
+    .btn-ghost {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover {
+      background: #f3ece0;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 20px auto;
+      padding: 0 20px;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(60, 45, 30, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      height: fit-content;
+    }
+
+    .sidebar h2 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .model-card {
+      background: #faf6ef;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+      position: relative;
+    }
+
+    .model-card:hover {
+      transform: translateY(-2px);
+      border-color: #d6c3ad;
+      background: #fff;
+    }
+
+    .model-card.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 4px 12px rgba(217, 107, 67, 0.15);
+    }
+
+    .model-card .emoji {
+      font-size: 1.7rem;
+      line-height: 1;
+    }
+
+    .model-card .name {
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .model-card .tag {
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .model-card.done::after {
+      content: "✓";
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #48a868;
+      color: #fff;
+      font-size: 0.72rem;
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+    }
+
+    .legend {
+      border-top: 1px dashed var(--border);
+      padding-top: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .line-sample {
+      width: 34px;
+      height: 0;
+    }
+
+    .line-sample.dashed {
+      border-top: 3px dashed var(--dashed-color);
+    }
+
+    .line-sample.solid {
+      border-top: 3px solid var(--solid-color);
+    }
+
+    .workspace {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 12px 35px rgba(60, 45, 30, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .step-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+      width: fit-content;
+    }
+
+    .instruction-text {
+      font-size: 1.08rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e2d9cb;
+      transition: all 0.25s;
+    }
+
+    .dot.done {
+      background: #48a868;
+    }
+
+    .dot.current {
+      background: var(--accent);
+      width: 24px;
+      border-radius: 999px;
+    }
+
+    .stage-container {
+      position: relative;
+      width: 100%;
+      height: 450px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 45%, #ffffff 0%, #f5efe4 100%);
+      border: 1px solid #ebe2d3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: background 0.5s ease;
+    }
+
+    /* 遊玩舞台背景 */
+    .stage-container.play-sky {
+      background: linear-gradient(180deg, #cce9ff 0%, #eaf6ff 70%, #f8fcff 100%);
+    }
+
+    .stage-container.play-pond {
+      background: linear-gradient(180deg, #dff5e6 0%, #bce8d8 55%, #8fd3cf 100%);
+    }
+
+    .stage-container.play-sea {
+      background: linear-gradient(180deg, #d7ecff 0%, #b7deff 55%, #5aa3d8 100%);
+    }
+
+    .stage-container.play-warm {
+      background: radial-gradient(circle at 50% 45%, #fff6f8 0%, #fde3ea 100%);
+    }
+
+    .stage-container.play-meadow {
+      background: linear-gradient(180deg, #e7f6ff 0%, #eff9e7 65%, #cbe8b4 100%);
+    }
+
+    .stage-container.play-dojo {
+      background: radial-gradient(circle at 50% 40%, #fff7e6 0%, #eed7b4 100%);
+    }
+
+    svg#origamiSvg {
+      width: 100%;
+      height: 100%;
+      max-width: 440px;
+      max-height: 440px;
+      overflow: visible;
+    }
+
+    .paper-layer {
+      transition: opacity 0.25s ease;
+      filter: drop-shadow(0 4px 10px rgba(65, 50, 35, 0.12));
+    }
+
+    .folding-anim {
+      animation: foldPulse 0.35s ease;
+      transform-origin: center;
+    }
+
+    @keyframes foldPulse {
+      0% { transform: scale(1); }
+      45% { transform: scale(0.94, 0.98) skewX(-2deg); }
+      100% { transform: scale(1); }
+    }
+
+    .guide-dashed {
+      stroke: var(--dashed-color);
+      stroke-width: 2.8;
+      stroke-dasharray: 8 6;
+      fill: none;
+      stroke-linecap: round;
+      animation: dashMove 1.4s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes dashMove {
+      to {
+        stroke-dashoffset: -28;
+      }
+    }
+
+    .guide-solid {
+      stroke: var(--solid-color);
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    .guide-arrow {
+      stroke: #e06a3b;
+      stroke-width: 3;
+      fill: none;
+      stroke-linecap: round;
+      pointer-events: none;
+    }
+
+    .hit-zone {
+      fill: rgba(43, 108, 176, 0.12);
+      stroke: rgba(43, 108, 176, 0.55);
+      stroke-width: 2;
+      stroke-dasharray: 4 3;
+      cursor: pointer;
+      transition: fill 0.2s, transform 0.2s;
+      animation: hitGlow 1.6s ease-in-out infinite;
+    }
+
+    .hit-zone:hover {
+      fill: rgba(217, 107, 67, 0.24);
+      stroke: var(--accent);
+    }
+
+    @keyframes hitGlow {
+      0%, 100% { fill-opacity: 0.6; }
+      50% { fill-opacity: 1; }
+    }
+
+    .click-hint {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(58, 50, 44, 0.82);
+      color: #fff;
+      font-size: 0.82rem;
+      padding: 6px 14px;
+      border-radius: 999px;
+      pointer-events: none;
+      white-space: nowrap;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 11px 22px;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(217, 107, 67, 0.28);
+      transition: transform 0.15s, background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary:hover {
+      background: #c75b35;
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active {
+      transform: translateY(1px);
+    }
+
+    .btn-action {
+      background: #2f855a;
+      box-shadow: 0 5px 14px rgba(47, 133, 90, 0.28);
+    }
+
+    .btn-action:hover {
+      background: #276749;
+    }
+
+    /* 完成互動動畫樣式 */
+    #playObject {
+      cursor: pointer;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .anim-fly {
+      animation: flyAcross 2.3s cubic-bezier(0.32, 0.08, 0.24, 1) forwards;
+    }
+
+    @keyframes flyAcross {
+      0% { transform: translate(0px, 0px) rotate(0deg) scale(1); }
+      15% { transform: translate(-25px, 12px) rotate(-10deg) scale(1.04); }
+      45% { transform: translate(230px, -110px) rotate(12deg) scale(0.7); opacity: 1; }
+      48% { opacity: 0; transform: translate(260px, -120px) scale(0.6); }
+      52% { opacity: 0; transform: translate(-260px, 80px) rotate(-8deg) scale(0.7); }
+      56% { opacity: 1; }
+      82% { transform: translate(25px, -18px) rotate(4deg) scale(1.05); }
+      100% { transform: translate(0px, 0px) rotate(0deg) scale(1); }
+    }
+
+    .anim-jump {
+      animation: frogJump 0.95s cubic-bezier(0.28, 0.84, 0.42, 1);
+    }
+
+    @keyframes frogJump {
+      0% { transform: translateY(0) scale(1, 1); }
+      15% { transform: translateY(12px) scale(1.14, 0.84); }
+      45% { transform: translateY(-125px) scale(0.92, 1.12); }
+      75% { transform: translateY(8px) scale(1.1, 0.88); }
+      90% { transform: translateY(-10px) scale(0.98, 1.03); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+
+    .anim-flap {
+      animation: craneSoar 1.8s ease-in-out;
+    }
+
+    @keyframes craneSoar {
+      0%, 100% { transform: translateY(0) scaleY(1); }
+      20% { transform: translateY(-28px) scaleY(0.84) rotate(-3deg); }
+      40% { transform: translateY(-42px) scaleY(1.08) rotate(2deg); }
+      60% { transform: translateY(-28px) scaleY(0.84) rotate(-2deg); }
+      80% { transform: translateY(-12px) scaleY(1.05); }
+    }
+
+    .anim-sail {
+      animation: boatSail 2.4s ease-in-out;
+    }
+
+    @keyframes boatSail {
+      0% { transform: translateX(0) rotate(0deg); }
+      25% { transform: translateX(48px) translateY(-8px) rotate(6deg); }
+      50% { transform: translateX(0px) translateY(4px) rotate(-5deg); }
+      75% { transform: translateX(-48px) translateY(-7px) rotate(5deg); }
+      100% { transform: translateX(0) rotate(0deg); }
+    }
+
+    .anim-spin {
+      animation: pinwheelSpin 1.8s cubic-bezier(0.18, 0.89, 0.32, 1);
+    }
+
+    @keyframes pinwheelSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(1080deg); }
+    }
+
+    .anim-heart {
+      animation: heartBeat 1.1s ease-in-out;
+    }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      20% { transform: scale(1.22); }
+      40% { transform: scale(0.96); }
+      60% { transform: scale(1.16); }
+      80% { transform: scale(1); }
+    }
+
+    .anim-kabuto {
+      animation: kabutoPower 1.1s ease-in-out;
+    }
+
+    @keyframes kabutoPower {
+      0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.12)); }
+      35% { transform: translateY(-16px) scale(1.08); filter: drop-shadow(0 0 22px rgba(235, 168, 52, 0.85)); }
+      70% { transform: translateY(3px) scale(0.98); }
+    }
+
+    .anim-fox {
+      animation: foxHop 1s ease-in-out;
+    }
+
+    @keyframes foxHop {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      20% { transform: translateY(-28px) rotate(-7deg); }
+      45% { transform: translateY(0) rotate(0deg); }
+      65% { transform: translateY(-22px) rotate(7deg); }
+    }
+
+    /* 舞台小裝飾 */
+    .stage-fx {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .floating-particle {
+      position: absolute;
+      font-size: 1.4rem;
+      animation: floatUp 1.4s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(0.8); }
+      100% { opacity: 0; transform: translateY(-90px) scale(1.4); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-badge">🦢</div>
+      <div>
+        <h1>和紙工坊 — 互動摺紙遊戲</h1>
+        <p>跟著紙上的實線與虛線一步步摺疊，完成後就能互動遊玩！</p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="paper-colors" title="切換淺色紙張色調">
+        <span>紙張顏色：</span>
+        <button class="color-dot active" data-front="#fcfaf4" data-back="#eee6d5" style="background:#fcfaf4" title="和紙米白"></button>
+        <button class="color-dot" data-front="#fff1f3" data-back="#f5d8df" style="background:#fff1f3" title="淺櫻粉"></button>
+        <button class="color-dot" data-front="#eff7ff" data-back="#d6e7f7" style="background:#eff7ff" title="淡晴藍"></button>
+        <button class="color-dot" data-front="#f3faee" data-back="#dcebd0" style="background:#f3faee" title="嫩芽綠"></button>
+        <button class="color-dot" data-front="#fffbe8" data-back="#f2e8bf" style="background:#fffbe8" title="柔鵝黃"></button>
+      </div>
+      <button class="btn-ghost" id="soundToggle">🔊 音效：開</button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <h2>
+        <span>選擇摺紙造型</span>
+        <span id="doneCounter" style="font-size:0.8rem;color:var(--muted);font-weight:normal;">已完成 0 / 8</span>
+      </h2>
+      <div class="model-grid" id="modelGrid"></div>
+
+      <div class="legend">
+        <div style="font-weight:600;color:var(--ink);">摺紙線條說明</div>
+        <div class="legend-item">
+          <span class="line-sample dashed"></span>
+          <span><strong>虛線</strong>：摺痕／對摺基準線</span>
+        </div>
+        <div class="legend-item">
+          <span class="line-sample solid"></span>
+          <span><strong>實線</strong>：要摺疊的邊緣／輪廓</span>
+        </div>
+        <div class="legend-item">
+          <span style="display:inline-block;width:34px;text-align:center;color:#e06a3b;font-weight:bold;">➜</span>
+          <span><strong>藍色發光區</strong>：點擊即可摺紙</span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <div class="step-header">
+        <div class="step-title-group">
+          <div class="step-badge" id="stepBadge">紙飛機 ・ 步驟 1 / 4</div>
+          <div class="instruction-text" id="instructionText">沿中心虛線輕輕對摺後展開，壓出中線摺痕。</div>
+        </div>
+        <div class="progress-dots" id="progressDots"></div>
+      </div>
+
+      <div class="stage-container" id="stageContainer">
+        <div class="stage-fx" id="stageFx"></div>
+        <svg id="origamiSvg" viewBox="0 0 400 400" aria-label="摺紙畫布">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,1 L7,4 L0,7 Z" fill="#e06a3b" />
+            </marker>
+            <pattern id="washiTexture" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="4" cy="6" r="0.7" fill="rgba(160,145,125,0.12)" />
+              <circle cx="15" cy="14" r="0.6" fill="rgba(160,145,125,0.1)" />
+              <path d="M2,16 Q8,14 14,17" stroke="rgba(160,145,125,0.07)" stroke-width="0.6" fill="none" />
+            </pattern>
+          </defs>
+          <g id="stageBackdrop"></g>
+          <g id="paperGroup"></g>
+          <g id="guidesGroup"></g>
+        </svg>
+        <div class="click-hint" id="clickHint">點擊紙上藍色提示區域摺疊這一步</div>
+      </div>
+
+      <div class="controls-bar">
+        <div style="display:flex;gap:8px;">
+          <button class="btn-ghost" id="prevBtn">← 上一步</button>
+          <button class="btn-ghost" id="resetBtn">↺ 重新開始</button>
+        </div>
+        <button class="btn-primary" id="mainActionBtn">摺這一步 ➜</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ---------- 音效系統 (Web Audio API，免外部檔案) ----------
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playFoldSound() {
+      if (!soundEnabled) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      // 模擬紙張摩擦摺疊聲
+      const duration = 0.16;
+      const bufferSize = ctx.sampleRate * duration;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        const env = Math.sin((i / bufferSize) * Math.PI);
+        data[i] = (Math.random() * 2 - 1) * 0.25 * env;
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(1600, ctx.currentTime);
+      filter.Q.value = 1.2;
+
+      noise.connect(filter);
+      filter.connect(ctx.destination);
+      noise.start();
+    }
+
+    function playSuccessChime() {
+      if (!soundEnabled) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.value = freq;
+        const start = ctx.currentTime + idx * 0.08;
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(0.14, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.36);
+      });
+    }
+
+    function playInteractSound(type) {
+      if (!soundEnabled) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      if (type === "fly" || type === "spin" || type === "sail") {
+        // 風聲 / 咻聲
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.exponentialRampToValueAtTime(640, now + 0.25);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.6);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+      } else if (type === "jump" || type === "fox") {
+        // 彈跳 boing
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(520, now + 0.18);
+        osc.frequency.exponentialRampToValueAtTime(300, now + 0.32);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      } else {
+        // 柔和叮咚
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880, now + 0.1);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      }
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.65);
+    }
+
+    // ---------- 8 種摺紙模型資料定義 ----------
+    // 畫布座標 0..400，標準正方形紙張為 [60,60] -> [340,340]
+    const MODELS = [
+      {
+        id: "airplane",
+        name: "紙飛機",
+        emoji: "✈️",
+        tag: "可起飛滑翔",
+        stageClass: "play-sky",
+        actionLabel: "✈️ 發射紙飛機！",
+        actionHint: "點擊紙飛機或按鈕，讓它在藍天飛翔！",
+        actionAnim: "anim-fly",
+        soundType: "fly",
+        steps: [
+          {
+            instruction: "步驟 1：沿著中央紅色虛線對摺後展開，壓出中心基準線。",
+            layers: [
+              { points: "60,60 340,60 340,340 60,340", side: "front" }
+            ],
+            dashed: ["200,60 200,340"],
+            solid: ["60,60 60,340", "340,60 340,340"],
+            arrow: { from: [85, 200], to: [315, 200], curve: [200, 165] },
+            hitZone: "60,60 200,60 200,340 60,340"
+          },
+          {
+            instruction: "步驟 2：將左上與右上兩角沿著虛線向中心實線對摺。",
+            layers: [
+              { points: "60,60 340,60 340,340 60,340", side: "front" }
+            ],
+            dashed: ["200,60 60,200", "200,60 340,200", "200,60 200,340"],
+            solid: ["60,60 200,60 60,200", "340,60 200,60 340,200"],
+            arrow: { from: [80, 80], to: [190, 175], curve: [110, 155] },
+            hitZone: "60,60 340,60 340,200 200,60 60,200"
+          },
+          {
+            instruction: "步驟 3：再將左右兩側斜邊沿虛線向中心摺入，摺出尖銳機頭。",
+            layers: [
+              { points: "60,200 200,60 340,200 340,340 60,340", side: "front" },
+              { points: "200,60 200,200 60,200", side: "back" },
+              { points: "200,60 340,200 200,200", side: "back" }
+            ],
+            dashed: ["200,60 115,340", "200,60 285,340", "200,60 200,340"],
+            solid: ["60,200 200,60", "340,200 200,60"],
+            arrow: { from: [95, 235], to: [195, 250], curve: [140, 275] },
+            hitZone: "60,200 200,60 340,200 340,340 60,340"
+          },
+          {
+            instruction: "步驟 4：沿中央虛線對摺並向下摺出機翼，紙飛機完成！",
+            layers: [
+              { points: "200,55 115,340 285,340", side: "front" },
+              { points: "200,55 115,340 200,340", side: "back" },
+              { points: "200,55 285,340 200,340", side: "back" }
+            ],
+            dashed: ["200,55 200,340", "200,55 155,340", "200,55 245,340"],
+            solid: ["200,55 115,340", "200,55 285,340"],
+            arrow: { from: [145, 220], to: [255, 220], curve: [200, 185] },
+            hitZone: "200,55 115,340 285,340"
+          }
+        ],
+        finalLayers: [
+          // 紙飛機立體視角
+          { points: "325,135 80,205 170,228", side: "front" },
+          { points: "325,135 170,228 195,275", side: "back" },
+          { points: "325,135 195,275 215,235", side: "shadow" },
+          { points: "325,135 215,235 280,270", side: "front" }
+        ],
+        finalExtras: `
+          <line x1="325" y1="135" x2="170" y2="228" stroke="#c8beae" stroke-width="1.5"/>
+          <line x1="325" y1="135" x2="215" y2="235" stroke="#c8beae" stroke-width="1.5"/>
+        `
+      },
+
+      {
+        id: "frog",
+        name: "跳跳青蛙",
+        emoji: "🐸",
+        tag: "點擊會彈跳",
+        stageClass: "play-pond",
+        actionLabel: "🐸 跳一下！",
+        actionHint: "點擊青蛙或按鈕，看它一躍而起！",
+        actionAnim: "anim-jump",
+        soundType: "jump",
+        steps: [
+          {
+            instruction: "步驟 1：將紙張上方兩角沿對角虛線交叉摺疊，壓出三角形頂端。",
+            layers: [
+              { points: "95,60 305,60 305,340 95,340", side: "front" }
+            ],
+            dashed: ["95,60 305,270", "305,60 95,270", "95,165 305,165"],
+            solid: ["95,60 305,60", "95,270 305,270"],
+            arrow: { from: [110, 75], to: [290, 250], curve: [230, 120] },
+            hitZone: "95,60 305,60 305,270 95,270"
+          },
+          {
+            instruction: "步驟 2：將兩側沿實線內收壓成尖三角，下方兩側向中心虛線對摺。",
+            layers: [
+              { points: "200,75 305,180 305,340 95,340 95,180", side: "front" },
+              { points: "200,75 305,180 95,180", side: "back" }
+            ],
+            dashed: ["147,180 147,340", "253,180 253,340", "200,180 200,340"],
+            solid: ["95,180 95,340", "305,180 305,340"],
+            arrow: { from: [100, 260], to: [190, 260], curve: [145, 235] },
+            hitZone: "95,180 305,180 305,340 95,340"
+          },
+          {
+            instruction: "步驟 3：底部向上對摺後，將下方兩角向外斜摺出青蛙後腿。",
+            layers: [
+              { points: "200,75 305,180 255,180 255,335 145,335 145,180 95,180", side: "front" },
+              { points: "200,75 305,180 95,180", side: "back" }
+            ],
+            dashed: ["145,260 255,260", "145,260 105,330", "255,260 295,330"],
+            solid: ["145,335 255,335"],
+            arrow: { from: [200, 325], to: [200, 225], curve: [170, 275] },
+            hitZone: "145,220 255,220 255,335 145,335"
+          },
+          {
+            instruction: "步驟 4：沿腰部虛線做 Z 字彈簧摺並翻開前腳，青蛙完成！",
+            layers: [
+              { points: "200,85 285,170 245,170 245,245 300,305 245,305 230,265 170,265 155,305 100,305 155,245 155,170 115,170", side: "front" },
+              { points: "200,85 285,170 115,170", side: "back" }
+            ],
+            dashed: ["155,235 245,235", "115,170 140,120", "285,170 260,120"],
+            solid: ["155,255 245,255"],
+            arrow: { from: [200, 285], to: [200, 215], curve: [230, 250] },
+            hitZone: "115,150 285,150 300,305 100,305"
+          }
+        ],
+        finalLayers: [
+          // 青蛙身體與四肢
+          { points: "200,115 255,180 240,265 160,265 145,180", side: "front" },
+          { points: "155,165 110,125 125,175 150,195", side: "back" }, // 左前腳
+          { points: "245,165 290,125 275,175 250,195", side: "back" }, // 右前腳
+          { points: "160,255 105,285 130,310 175,275", side: "back" }, // 左後腿
+          { points: "240,255 295,285 270,310 225,275", side: "back" }, // 右後腿
+          { points: "200,115 255,180 145,180", side: "front" }
+        ],
+        finalExtras: `
+          <circle cx="172" cy="142" r="10" fill="#fff" stroke="#3a322c" stroke-width="2"/>
+          <circle cx="228" cy="142" r="10" fill="#fff" stroke="#3a322c" stroke-width="2"/>
+          <circle cx="173" cy="140" r="5" fill="#3a322c"/>
+          <circle cx="227" cy="140" r="5" fill="#3a322c"/>
+          <path d="M185,162 Q200,172 215,162" stroke="#3a322c" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <line x1="160" y1="245" x2="240" y2="245" stroke="#c8beae" stroke-width="1.5"/>
+        `
+      },
+
+      {
+        id: "crane",
+        name: "紙鶴",
+        emoji: "🦢",
+        tag: "可拍動翅膀",
+        stageClass: "play-sky",
+        actionLabel: "🦢 振翅飛翔",
+        actionHint: "點擊紙鶴或按鈕，看它優雅拍動雙翅！",
+        actionAnim: "anim-flap",
+        soundType: "flap",
+        steps: [
+          {
+            instruction: "步驟 1：沿對角虛線對摺成三角形，再收合為雙層正方形基礎。",
+            layers: [
+              { points: "60,60 340,60 340,340 60,340", side: "front" }
+            ],
+            dashed: ["60,60 340,340", "340,60 60,340", "200,60 200,340"],
+            solid: ["60,60 340,340", "60,340 340,60"],
+            arrow: { from: [80, 80], to: [315, 315], curve: [230, 150] },
+            hitZone: "60,60 340,60 340,340 60,340"
+          },
+          {
+            instruction: "步驟 2：將菱形左右兩角沿虛線向中心摺，並向上拉開成細長鳥型。",
+            layers: [
+              { points: "200,70 320,190 200,320 80,190", side: "front" }
+            ],
+            dashed: ["200,70 155,320", "200,70 245,320", "130,190 270,190"],
+            solid: ["80,190 200,320", "320,190 200,320"],
+            arrow: { from: [95, 195], to: [188, 220], curve: [135, 240] },
+            hitZone: "200,70 320,190 200,320 80,190"
+          },
+          {
+            instruction: "步驟 3：將細長兩端向上內翻摺出脖子與尾巴，頂端再向下摺出鶴嘴。",
+            layers: [
+              { points: "200,80 245,195 200,325 155,195", side: "front" },
+              { points: "200,195 160,300 200,325 240,300", side: "back" }
+            ],
+            dashed: ["170,210 110,120", "230,210 290,120", "110,120 92,136"],
+            solid: ["155,195 200,325", "245,195 200,325"],
+            arrow: { from: [175, 275], to: [115, 145], curve: [120, 230] },
+            hitZone: "110,115 290,115 245,325 155,325"
+          },
+          {
+            instruction: "步驟 4：將中央兩片大翅膀沿虛線輕輕向下翻開，紙鶴完成！",
+            layers: [
+              { points: "200,90 235,205 200,255 165,205", side: "front" },
+              { points: "175,245 100,130 120,120 190,220", side: "back" }, // 頸
+              { points: "100,130 80,148 115,142", side: "front" }, // 頭嘴
+              { points: "225,245 295,125 280,120 210,220", side: "back" } // 尾
+            ],
+            dashed: ["165,205 235,205", "165,205 200,90"],
+            solid: ["200,90 165,205", "200,90 235,205"],
+            arrow: { from: [200, 110], to: [200, 230], curve: [235, 170] },
+            hitZone: "155,90 245,90 245,255 155,255"
+          }
+        ],
+        finalLayers: [
+          { points: "180,235 85,125 108,118 195,210", side: "back" }, // 頸
+          { points: "85,125 62,144 98,139", side: "front" }, // 頭嘴
+          { points: "220,235 312,115 292,108 205,210", side: "back" }, // 尾
+          { points: "155,215 210,125 270,210 200,260", side: "shadow" }, // 後翼
+          { points: "150,225 190,145 255,235 195,265", side: "front" } // 前翼
+        ],
+        finalExtras: `
+          <circle cx="88" cy="128" r="2.5" fill="#3a322c"/>
+        `
+      },
+
+      {
+        id: "boat",
+        name: "紙船",
+        emoji: "⛵",
+        tag: "可乘風破浪",
+        stageClass: "play-sea",
+        actionLabel: "⛵ 乘風航行",
+        actionHint: "點擊小紙船或按鈕，讓它在浪花上搖曳前進！",
+        actionAnim: "anim-sail",
+        soundType: "sail",
+        steps: [
+          {
+            instruction: "步驟 1：紙張上下對摺成矩形後，將左上與右上角沿虛線向中心摺。",
+            layers: [
+              { points: "70,110 330,110 330,300 70,300", side: "front" }
+            ],
+            dashed: ["200,110 70,240", "200,110 330,240", "200,110 200,300"],
+            solid: ["70,110 200,110 70,240", "330,110 200,110 330,240"],
+            arrow: { from: [85, 125], to: [190, 215], curve: [120, 200] },
+            hitZone: "70,110 330,110 330,240 70,240"
+          },
+          {
+            instruction: "步驟 2：將底部前後兩層長條沿虛線向上翻摺，折成紙帽形狀。",
+            layers: [
+              { points: "200,105 330,235 330,295 70,295 70,235", side: "front" },
+              { points: "200,105 330,235 200,235", side: "back" },
+              { points: "200,105 200,235 70,235", side: "back" }
+            ],
+            dashed: ["70,235 330,235"],
+            solid: ["70,295 330,295"],
+            arrow: { from: [200, 285], to: [200, 205], curve: [165, 245] },
+            hitZone: "70,235 330,235 330,295 70,295"
+          },
+          {
+            instruction: "步驟 3：從底部撐開壓平為菱形，並將下方兩角向上摺成小三角形。",
+            layers: [
+              { points: "200,85 315,200 200,315 85,200", side: "front" },
+              { points: "85,200 315,200 200,315", side: "back" }
+            ],
+            dashed: ["85,200 315,200"],
+            solid: ["85,200 200,315 315,200"],
+            arrow: { from: [200, 295], to: [200, 120], curve: [240, 205] },
+            hitZone: "85,200 315,200 200,315"
+          },
+          {
+            instruction: "步驟 4：再次撐開底部並向左右兩側拉出船頭船尾，紙船完成！",
+            layers: [
+              { points: "200,105 290,225 110,225", side: "front" },
+              { points: "110,225 200,130 290,225", side: "back" }
+            ],
+            dashed: ["110,225 290,225", "200,105 200,225"],
+            solid: ["110,225 200,105 290,225"],
+            arrow: { from: [140, 210], to: [70, 210], curve: [105, 190] },
+            hitZone: "110,105 290,105 290,235 110,235"
+          }
+        ],
+        finalLayers: [
+          { points: "200,115 265,235 135,235", side: "back" }, // 船帆
+          { points: "65,205 145,235 100,275", side: "front" }, // 左船頭
+          { points: "335,205 255,235 300,275", side: "front" }, // 右船尾
+          { points: "65,205 335,205 300,275 100,275", side: "front" }, // 船身
+          { points: "145,235 200,115 255,235", side: "shadow" } // 中心帆立面
+        ],
+        finalExtras: `
+          <path d="M55,280 Q125,268 200,280 T345,280" stroke="rgba(255,255,255,0.75)" stroke-width="4" fill="none" stroke-linecap="round"/>
+        `
+      },
+
+      {
+        id: "pinwheel",
+        name: "風車",
+        emoji: "🎡",
+        tag: "點擊隨風旋轉",
+        stageClass: "play-meadow",
+        actionLabel: "💨 吹動風車！",
+        actionHint: "點擊風車或按鈕，讓四片葉片高速旋轉！",
+        actionAnim: "anim-spin",
+        soundType: "spin",
+        steps: [
+          {
+            instruction: "步驟 1：沿對角虛線壓出中心點，依藍色實線從四角往中心剪/摺約三分之二。",
+            layers: [
+              { points: "60,60 340,60 340,340 60,340", side: "front" }
+            ],
+            dashed: ["150,150 250,250", "250,150 150,250"],
+            solid: ["60,60 150,150", "340,60 250,150", "340,340 250,250", "60,340 150,250"],
+            arrow: { from: [70, 70], to: [145, 145], curve: [120, 95] },
+            hitZone: "60,60 340,60 340,340 60,340"
+          },
+          {
+            instruction: "步驟 2：先將左上與右下兩片葉角沿虛線摺向中心點。",
+            layers: [
+              { points: "60,60 340,60 340,340 60,340", side: "front" }
+            ],
+            dashed: ["60,60 200,60 200,200", "340,340 200,340 200,200"],
+            solid: ["60,60 200,60", "340,340 200,340"],
+            arrow: { from: [80, 75], to: [195, 195], curve: [155, 100] },
+            hitZone: "60,60 200,60 200,200 60,200"
+          },
+          {
+            instruction: "步驟 3：再將右上與左下葉角依序摺向中心點固定。",
+            layers: [
+              { points: "200,60 340,60 340,340 200,340 200,200 60,200 60,340 200,340", side: "front" },
+              { points: "60,60 200,60 200,200", side: "back" },
+              { points: "200,200 340,340 200,340", side: "back" }
+            ],
+            dashed: ["340,60 340,200 200,200", "60,340 60,200 200,200"],
+            solid: ["340,60 340,200", "60,340 60,200"],
+            arrow: { from: [325, 80], to: [205, 195], curve: [305, 160] },
+            hitZone: "200,60 340,60 340,200 200,200"
+          },
+          {
+            instruction: "步驟 4：撐開四片葉瓣弧度並裝上中心軸，紙風車完成！",
+            layers: [
+              { points: "60,60 200,60 200,200", side: "back" },
+              { points: "340,60 340,200 200,200", side: "back" },
+              { points: "340,340 200,340 200,200", side: "back" },
+              { points: "60,340 60,200 200,200", side: "back" },
+              { points: "200,60 270,130 200,200", side: "front" },
+              { points: "340,200 270,270 200,200", side: "front" },
+              { points: "200,340 130,270 200,200", side: "front" },
+              { points: "60,200 130,130 200,200", side: "front" }
+            ],
+            dashed: ["130,130 270,270", "270,130 130,270"],
+            solid: ["130,130 200,200", "270,130 200,200", "270,270 200,200", "130,270 200,200"],
+            arrow: { from: [215, 145], to: [255, 195], curve: [255, 150] },
+            hitZone: "90,90 310,90 310,310 90,310"
+          }
+        ],
+        finalLayers: [
+          // 四葉立體風車
+          { points: "200,200 120,90 200,65", side: "back" },
+          { points: "200,200 200,65 255,145", side: "front" },
+          { points: "200,200 310,120 335,200", side: "back" },
+          { points: "200,200 335,200 255,255", side: "front" },
+          { points: "200,200 280,310 200,335", side: "back" },
+          { points: "200,200 200,335 145,255", side: "front" },
+          { points: "200,200 90,280 65,200", side: "back" },
+          { points: "200,200 65,200 145,145", side: "front" }
+        ],
+        finalBackdrop: `
+          <rect x="195" y="200" width="10" height="175" rx="5" fill="#b79168" stroke="#8a6845" stroke-width="1.5"/>
+        `,
+        finalExtras: `
+          <circle cx="200" cy="200" r="10" fill="#d96b43" stroke="#fff" stroke-width="2.5"/>
+        `
+      },
+
+      {
+        id: "heart",
+        name: "愛心",
+        emoji: "❤️",
+        tag: "點擊會跳動",
+        stageClass: "play-warm",
+        actionLabel: "💖 送出愛心！",
+        actionHint: "點擊愛心或按鈕，感受暖暖的心跳與愛心泡泡！",
+        actionAnim: "anim-heart",
+        soundType: "chime",
+        steps: [
+          {
+            instruction: "步驟 1：壓出十字虛線後，將頂角沿虛線向下摺至中心點。",
+            layers: [
+              { points: "200,50 350,200 200,350 50,200", side: "front" }
+            ],
+            dashed: ["125,125 275,125", "200,50 200,350", "50,200 350,200"],
+            solid: ["125,125 200,50 275,125"],
+            arrow: { from: [200, 65], to: [200, 190], curve: [230, 125] },
+            hitZone: "125,125 200,50 275,125"
+          },
+          {
+            instruction: "步驟 2：將底角沿中央虛線向上翻摺至上緣實線處。",
+            layers: [
+              { points: "125,125 275,125 350,200 200,350 50,200", side: "front" },
+              { points: "125,125 275,125 200,200", side: "back" }
+            ],
+            dashed: ["50,200 350,200"],
+            solid: ["50,200 200,350 350,200"],
+            arrow: { from: [200, 330], to: [200, 140], curve: [165, 235] },
+            hitZone: "50,200 350,200 200,350"
+          },
+          {
+            instruction: "步驟 3：將左下與右下邊沿中心虛線向上斜摺，摺出愛心外型。",
+            layers: [
+              { points: "125,125 275,125 350,200 200,200 50,200", side: "front" },
+              { points: "125,125 275,125 200,200", side: "back" },
+              { points: "87,162 200,125 313,162 200,200", side: "front" }
+            ],
+            dashed: ["200,200 100,100", "200,200 300,100", "200,125 200,260"],
+            solid: ["50,200 200,200", "350,200 200,200"],
+            arrow: { from: [80, 190], to: [155, 130], curve: [100, 135] },
+            hitZone: "50,120 350,120 350,220 50,220"
+          },
+          {
+            instruction: "步驟 4：將頂部兩個小尖角與左右凸角向下內摺圓潤，愛心完成！",
+            layers: [
+              { points: "135,95 200,160 265,95 330,160 200,295 70,160", side: "front" }
+            ],
+            dashed: ["100,130 170,130", "230,130 300,130", "85,145 85,175", "315,145 315,175"],
+            solid: ["100,130 135,95 170,130", "230,130 265,95 300,130"],
+            arrow: { from: [135, 102], to: [135, 132], curve: [152, 117] },
+            hitZone: "70,95 330,95 330,295 70,295"
+          }
+        ],
+        finalLayers: [
+          { points: "105,125 165,125 200,160 235,125 295,125 325,160 320,195 200,315 80,195 75,160", side: "front" },
+          { points: "105,125 165,125 200,160 140,210 80,195 75,160", side: "back" }
+        ],
+        finalExtras: `
+          <line x1="200" y1="160" x2="200" y2="315" stroke="#c8beae" stroke-width="1.5"/>
+          <path d="M115,155 Q135,142 155,152" stroke="rgba(217,107,67,0.35)" stroke-width="3" fill="none" stroke-linecap="round"/>
+        `
+      },
+
+      {
+        id: "kabuto",
+        name: "武士頭盔",
+        emoji: "⛑️",
+        tag: "閃耀武士氣場",
+        stageClass: "play-dojo",
+        actionLabel: "⚔️ 展現氣勢！",
+        actionHint: "點擊武士頭盔或按鈕，閃耀金光氣場！",
+        actionAnim: "anim-kabuto",
+        soundType: "chime",
+        steps: [
+          {
+            instruction: "步驟 1：將正方形沿橫向對角虛線向下對摺，變成倒大三角形。",
+            layers: [
+              { points: "200,50 350,200 200,350 50,200", side: "front" }
+            ],
+            dashed: ["50,200 350,200"],
+            solid: ["50,200 200,50 350,200"],
+            arrow: { from: [200, 65], to: [200, 325], curve: [240, 200] },
+            hitZone: "200,50 350,200 50,200"
+          },
+          {
+            instruction: "步驟 2：將左右兩角沿虛線向下對摺至底角，摺成正菱形。",
+            layers: [
+              { points: "50,130 350,130 200,280", side: "front" }
+            ],
+            dashed: ["125,205 200,130", "275,205 200,130"],
+            solid: ["50,130 200,280", "350,130 200,280"],
+            arrow: { from: [70, 142], to: [190, 265], curve: [100, 225] },
+            hitZone: "50,130 350,130 200,280"
+          },
+          {
+            instruction: "步驟 3：將下方兩片長角沿虛線向上外斜摺，變成帥氣的頭盔雙角！",
+            layers: [
+              { points: "125,130 275,130 200,205 200,280", side: "front" },
+              { points: "200,130 200,280 125,205", side: "back" },
+              { points: "200,130 275,205 200,280", side: "back" }
+            ],
+            dashed: ["200,205 110,120", "200,205 290,120"],
+            solid: ["125,205 200,280 275,205"],
+            arrow: { from: [175, 255], to: [110, 140], curve: [120, 210] },
+            hitZone: "125,130 275,130 275,280 125,280"
+          },
+          {
+            instruction: "步驟 4：將最下方前層向上摺兩次形成護額帽簷，武士頭盔完成！",
+            layers: [
+              { points: "125,130 275,130 275,205 200,280 125,205", side: "front" },
+              { points: "200,205 90,110 140,145", side: "back" },
+              { points: "200,205 310,110 260,145", side: "back" }
+            ],
+            dashed: ["125,220 275,220", "145,245 255,245"],
+            solid: ["125,205 200,280 275,205"],
+            arrow: { from: [200, 270], to: [200, 210], curve: [225, 240] },
+            hitZone: "125,205 275,205 200,280"
+          }
+        ],
+        finalLayers: [
+          { points: "130,135 270,135 305,215 95,215", side: "front" }, // 頭盔本體
+          { points: "175,205 70,95 140,155", side: "back" }, // 左牛角
+          { points: "225,205 330,95 260,155", side: "back" }, // 右牛角
+          { points: "110,215 290,215 280,255 120,255", side: "front" }, // 護額
+          { points: "95,215 120,255 80,280", side: "shadow" }, // 左護頸
+          { points: "305,215 280,255 320,280", side: "shadow" } // 右護頸
+        ],
+        finalExtras: `
+          <line x1="200" y1="135" x2="200" y2="215" stroke="#c8beae" stroke-width="1.5"/>
+          <polygon points="200,160 212,185 200,198 188,185" fill="#d96b43" opacity="0.85"/>
+        `
+      },
+
+      {
+        id: "fox",
+        name: "小狐狸",
+        emoji: "🦊",
+        tag: "抖耳開心跳",
+        stageClass: "play-meadow",
+        actionLabel: "🦊 開心叫一聲！",
+        actionHint: "點擊小狐狸或按鈕，看它可愛地跳動！",
+        actionAnim: "anim-fox",
+        soundType: "fox",
+        steps: [
+          {
+            instruction: "步驟 1：沿著橫向對角虛線向下對摺，摺成大三角形。",
+            layers: [
+              { points: "200,50 350,200 200,350 50,200", side: "front" }
+            ],
+            dashed: ["50,200 350,200"],
+            solid: ["50,200 200,50 350,200"],
+            arrow: { from: [200, 65], to: [200, 325], curve: [160, 200] },
+            hitZone: "200,50 350,200 50,200"
+          },
+          {
+            instruction: "步驟 2：將底邊左右兩側沿斜虛線向上摺起，形成尖尖的狐狸耳朵！",
+            layers: [
+              { points: "50,130 350,130 200,280", side: "front" }
+            ],
+            dashed: ["130,210 100,130", "270,210 300,130"],
+            solid: ["50,130 130,210", "350,130 270,210"],
+            arrow: { from: [65, 140], to: [120, 90], curve: [75, 100] },
+            hitZone: "50,130 350,130 200,280"
+          },
+          {
+            instruction: "步驟 3：整理兩側臉頰並將小下巴往後摺一點點，小狐狸就完成了！",
+            layers: [
+              { points: "130,130 270,130 270,210 200,280 130,210", side: "front" },
+              { points: "130,210 95,90 155,130", side: "back" },
+              { points: "270,210 305,90 245,130", side: "back" }
+            ],
+            dashed: ["180,260 220,260", "130,130 130,210", "270,130 270,210"],
+            solid: ["180,260 200,280 220,260"],
+            arrow: { from: [200, 275], to: [200, 245], curve: [220, 260] },
+            hitZone: "120,130 280,130 280,280 120,280"
+          }
+        ],
+        finalLayers: [
+          { points: "125,135 275,135 275,215 215,275 185,275 125,215", side: "front" },
+          { points: "125,215 92,92 162,135", side: "back" }, // 左耳
+          { points: "275,215 308,92 238,135", side: "back" }, // 右耳
+          { points: "110,122 142,135 125,175", side: "shadow" },
+          { points: "290,122 258,135 275,175", side: "shadow" }
+        ],
+        finalExtras: `
+          <circle cx="165" cy="185" r="7" fill="#3a322c"/>
+          <circle cx="235" cy="185" r="7" fill="#3a322c"/>
+          <circle cx="163" cy="183" r="2.2" fill="#fff"/>
+          <circle cx="233" cy="183" r="2.2" fill="#fff"/>
+          <polygon points="190,248 210,248 200,262" fill="#3a322c"/>
+          <ellipse cx="145" cy="212" rx="10" ry="6" fill="rgba(217,107,67,0.3)"/>
+          <ellipse cx="255" cy="212" rx="10" ry="6" fill="rgba(217,107,67,0.3)"/>
+        `
+      }
+    ];
+
+    // ---------- 狀態管理 ----------
+    let currentModelIndex = 0;
+    let currentStep = 0; // 0..steps.length (== steps.length 表示已完成)
+    const completedSet = new Set();
+    let paperColors = { front: "#fcfaf4", back: "#eee6d5" };
+
+    // DOM 參照
+    const modelGrid = document.getElementById("modelGrid");
+    const doneCounter = document.getElementById("doneCounter");
+    const stepBadge = document.getElementById("stepBadge");
+    const instructionText = document.getElementById("instructionText");
+    const progressDots = document.getElementById("progressDots");
+    const stageContainer = document.getElementById("stageContainer");
+    const stageFx = document.getElementById("stageFx");
+    const stageBackdrop = document.getElementById("stageBackdrop");
+    const paperGroup = document.getElementById("paperGroup");
+    const guidesGroup = document.getElementById("guidesGroup");
+    const clickHint = document.getElementById("clickHint");
+    const prevBtn = document.getElementById("prevBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const mainActionBtn = document.getElementById("mainActionBtn");
+    const soundToggle = document.getElementById("soundToggle");
+
+    // ---------- 渲染左側選項清單 ----------
+    function renderModelGrid() {
+      modelGrid.innerHTML = "";
+      MODELS.forEach((m, idx) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "model-card" +
+          (idx === currentModelIndex ? " active" : "") +
+          (completedSet.has(m.id) ? " done" : "");
+        card.innerHTML = `
+          <span class="emoji">${m.emoji}</span>
+          <span class="name">${m.name}</span>
+          <span class="tag">${m.tag}</span>
+        `;
+        card.addEventListener("click", () => selectModel(idx));
+        modelGrid.appendChild(card);
+      });
+      doneCounter.textContent = `已完成 ${completedSet.size} / ${MODELS.length}`;
+    }
+
+    function selectModel(idx) {
+      currentModelIndex = idx;
+      currentStep = 0;
+      renderModelGrid();
+      renderStage();
+    }
+
+    // ---------- 計算紙張填充色 ----------
+    function getSideFill(side) {
+      if (side === "front") return paperColors.front;
+      if (side === "back") return paperColors.back;
+      // 陰影面
+      return shadeColor(paperColors.back, -12);
+    }
+
+    function shadeColor(hex, percent) {
+      const num = parseInt(hex.slice(1), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+      const G = Math.max(0, Math.min(255, ((num >> 8) & 0x00ff) + amt));
+      const B = Math.max(0, Math.min(255, (num & 0x0000ff) + amt));
+      return "#" + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+
+    // ---------- 渲染主畫布 ----------
+    function renderStage(animateFold = false) {
+      const model = MODELS[currentModelIndex];
+      const total = model.steps.length;
+      const isComplete = currentStep >= total;
+
+      // 進度點
+      progressDots.innerHTML = "";
+      for (let i = 0; i < total; i++) {
+        const dot = document.createElement("span");
+        dot.className = "dot" + (i < currentStep || isComplete ? " done" : (i === currentStep ? " current" : ""));
+        progressDots.appendChild(dot);
+      }
+
+      // 清除舞台背景與特效
+      stageContainer.className = "stage-container" + (isComplete ? " " + model.stageClass : "");
+      stageBackdrop.innerHTML = "";
+      paperGroup.innerHTML = "";
+      guidesGroup.innerHTML = "";
+
+      if (isComplete) {
+        // 完成狀態 -> 進入互動模式
+        stepBadge.textContent = `${model.emoji} ${model.name} ・ 摺紙完成！`;
+        instructionText.textContent = model.actionHint;
+        clickHint.textContent = `點擊${model.name}試試看專屬互動！`;
+        prevBtn.disabled = false;
+        mainActionBtn.textContent = model.actionLabel;
+        mainActionBtn.classList.add("btn-action");
+
+        if (model.finalBackdrop) {
+          stageBackdrop.innerHTML = model.finalBackdrop;
+        }
+
+        const playObj = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        playObj.id = "playObject";
+        drawLayers(playObj, model.finalLayers);
+        if (model.finalExtras) {
+          playObj.innerHTML += model.finalExtras;
+        }
+        playObj.addEventListener("click", triggerPlayAction);
+        paperGroup.appendChild(playObj);
+
+      } else {
+        // 摺紙進行中
+        const step = model.steps[currentStep];
+        stepBadge.textContent = `${model.emoji} ${model.name} ・ 步驟 ${currentStep + 1} / ${total}`;
+        instructionText.textContent = step.instruction;
+        clickHint.textContent = "點擊紙上藍色發光提示區，或按下「摺這一步」";
+        prevBtn.disabled = currentStep === 0;
+        mainActionBtn.textContent = currentStep === total - 1 ? "完成最後一摺 ✨" : "摺這一步 ➜";
+        mainActionBtn.classList.remove("btn-action");
+
+        const wrapper = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        if (animateFold) wrapper.classList.add("folding-anim");
+        drawLayers(wrapper, step.layers);
+        paperGroup.appendChild(wrapper);
+
+        // 繪製點擊互動熱區
+        if (step.hitZone) {
+          const hit = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          hit.setAttribute("points", step.hitZone);
+          hit.setAttribute("class", "hit-zone");
+          hit.addEventListener("click", nextStep);
+          guidesGroup.appendChild(hit);
+        }
+
+        // 繪製實線 (solid)
+        (step.solid || []).forEach(lineStr => {
+          const pts = lineStr.trim().split(/\s+/);
+          const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+          el.setAttribute("points", pts.join(" "));
+          el.setAttribute("class", "guide-solid");
+          guidesGroup.appendChild(el);
+        });
+
+        // 繪製虛線 (dashed)
+        (step.dashed || []).forEach(lineStr => {
+          const pts = lineStr.trim().split(/\s+/);
+          const el = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+          el.setAttribute("points", pts.join(" "));
+          el.setAttribute("class", "guide-dashed");
+          guidesGroup.appendChild(el);
+        });
+
+        // 繪製摺疊方向彎曲箭頭
+        if (step.arrow) {
+          const { from, to, curve } = step.arrow;
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("d", `M${from[0]},${from[1]} Q${curve[0]},${curve[1]} ${to[0]},${to[1]}`);
+          path.setAttribute("class", "guide-arrow");
+          path.setAttribute("marker-end", "url(#arrowhead)");
+          guidesGroup.appendChild(path);
+        }
+      }
+    }
+
+    function drawLayers(targetGroup, layers) {
+      layers.forEach(layer => {
+        const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        poly.setAttribute("points", layer.points);
+        poly.setAttribute("fill", getSideFill(layer.side));
+        poly.setAttribute("stroke", "#bdb2a0");
+        poly.setAttribute("stroke-width", "1.6");
+        poly.setAttribute("stroke-linejoin", "round");
+        poly.setAttribute("class", "paper-layer");
+        targetGroup.appendChild(poly);
+
+        // 疊加細微和紙纖維紋理
+        const tex = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        tex.setAttribute("points", layer.points);
+        tex.setAttribute("fill", "url(#washiTexture)");
+        tex.setAttribute("pointer-events", "none");
+        targetGroup.appendChild(tex);
+      });
+    }
+
+    // ---------- 摺紙操作控制 ----------
+    function nextStep() {
+      const model = MODELS[currentModelIndex];
+      if (currentStep >= model.steps.length) {
+        triggerPlayAction();
+        return;
+      }
+      currentStep++;
+      playFoldSound();
+      if (currentStep >= model.steps.length) {
+        completedSet.add(model.id);
+        renderModelGrid();
+        playSuccessChime();
+        spawnParticles(model.emoji, 5);
+      }
+      renderStage(true);
+    }
+
+    function prevStep() {
+      if (currentStep > 0) {
+        currentStep--;
+        playFoldSound();
+        renderStage(false);
+      }
+    }
+
+    function resetModel() {
+      currentStep = 0;
+      renderStage(false);
+    }
+
+    // ---------- 完成後的互動動作 ----------
+    function triggerPlayAction() {
+      const model = MODELS[currentModelIndex];
+      const obj = document.getElementById("playObject");
+      if (!obj) return;
+
+      // 重新觸發 CSS animation
+      obj.classList.remove(model.actionAnim);
+      void obj.offsetWidth;
+      obj.classList.add(model.actionAnim);
+
+      playInteractSound(model.soundType);
+
+      // 依造型產生視覺粒子特效
+      if (model.id === "airplane") spawnParticles("💨", 4);
+      if (model.id === "frog") spawnParticles("💧", 4);
+      if (model.id === "crane") spawnParticles("✨", 5);
+      if (model.id === "boat") spawnParticles("🌊", 4);
+      if (model.id === "pinwheel") spawnParticles("🍃", 5);
+      if (model.id === "heart") spawnParticles("💖", 6);
+      if (model.id === "kabuto") spawnParticles("⚡", 5);
+      if (model.id === "fox") spawnParticles("🌸", 5);
+    }
+
+    function spawnParticles(symbol, count) {
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement("span");
+        el.className = "floating-particle";
+        el.textContent = symbol;
+        el.style.left = (28 + Math.random() * 44) + "%";
+        el.style.top = (38 + Math.random() * 32) + "%";
+        el.style.animationDelay = (i * 0.09) + "s";
+        stageFx.appendChild(el);
+        setTimeout(() => el.remove(), 1600);
+      }
+    }
+
+    // ---------- 事件監聽 ----------
+    mainActionBtn.addEventListener("click", nextStep);
+    prevBtn.addEventListener("click", prevStep);
+    resetBtn.addEventListener("click", resetModel);
+
+    document.querySelectorAll(".color-dot").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".color-dot").forEach(d => d.classList.remove("active"));
+        btn.classList.add("active");
+        paperColors = {
+          front: btn.dataset.front,
+          back: btn.dataset.back
+        };
+        renderStage(false);
+      });
+    });
+
+    soundToggle.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      soundToggle.textContent = soundEnabled ? "🔊 音效：開" : "🔇 音效：關";
+    });
+
+    // 初始載入
+    renderModelGrid();
+    renderStage();
+  </script>
+</body>
+</html>

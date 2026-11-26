@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>家政 × 視藝｜布娃娃設計草稿與裁剪工坊</title>
+  <style>
+    :root {
+      --bg-paper: #faf6ef;
+      --bg-card: #ffffff;
+      --accent: #d96b52;
+      --accent-dark: #b85039;
+      --teal: #3f8f8b;
+      --ink: #3c342e;
+      --muted: #7a6f66;
+      --border: #e5dccf;
+      --grid-line: rgba(63, 143, 139, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+      background-color: var(--bg-paper);
+      color: var(--ink);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: #fffdf9;
+      border-bottom: 2px dashed var(--border);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .brand p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1.5px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent-dark);
+    }
+
+    .btn-teal {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #fff;
+    }
+
+    .btn-teal:hover {
+      background: #327672;
+    }
+
+    /* Main Layout */
+    .workspace {
+      flex: 1;
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Left Panel: Controls */
+    .panel {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(60, 52, 46, 0.05);
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Part Tabs */
+    .part-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .part-tab {
+      border: 1.5px solid var(--border);
+      background: #fcfaf6;
+      border-radius: 10px;
+      padding: 8px 4px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+
+    .part-tab .icon {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+
+    .part-tab.active {
+      background: #fff2ee;
+      border-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .control-group {
+      margin-bottom: 18px;
+    }
+
+    .control-label {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .control-label span.hint {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* Option Grid */
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .option-grid.cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .choice-card {
+      border: 1.5px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s;
+      text-align: left;
+    }
+
+    .choice-card:hover {
+      border-color: #cbbba6;
+    }
+
+    .choice-card.selected {
+      border-color: var(--accent);
+      background: #fff5f2;
+      color: var(--accent-dark);
+      box-shadow: 0 0 0 2px rgba(217, 107, 82, 0.15);
+    }
+
+    .swatch {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    /* Color Dots */
+    .color-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .color-dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1.5px var(--border);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .color-dot:hover {
+      transform: scale(1.1);
+    }
+
+    .color-dot.selected {
+      box-shadow: 0 0 0 2.5px var(--accent);
+      transform: scale(1.12);
+    }
+
+    /* Right Panel: Canvas Stage */
+    .stage-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .stage-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 12px 18px;
+    }
+
+    .mode-switch {
+      display: inline-flex;
+      background: #f3ede3;
+      padding: 4px;
+      border-radius: 12px;
+      gap: 4px;
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Drafting Mat */
+    .canvas-box {
+      background-color: #fffef9;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 24px 24px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 520px;
+      box-shadow: inset 0 0 30px rgba(60, 52, 46, 0.03);
+    }
+
+    .status-banner {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px dashed var(--teal);
+      color: var(--teal);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .doll-name-input {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 600;
+      color: var(--ink);
+      width: 170px;
+    }
+
+    #dollSvg {
+      width: 100%;
+      max-width: 660px;
+      height: auto;
+      max-height: 490px;
+      overflow: visible;
+    }
+
+    /* Smooth assembly transition for SVG groups */
+    .doll-part-group {
+      transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .draft-annotation {
+      transition: opacity 0.35s ease;
+    }
+
+    /* Spec Card */
+    .spec-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+    }
+
+    .spec-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 8px;
+    }
+
+    .spec-header h3 {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .spec-item {
+      background: #faf7f2;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .spec-item strong {
+      display: block;
+      color: var(--accent-dark);
+      margin-bottom: 3px;
+      font-size: 13px;
+    }
+
+    .tools-tip {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
+      background: #f4f9f8;
+      border-left: 4px solid var(--teal);
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    @media print {
+      header .header-actions,
+      .panel,
+      .stage-toolbar {
+        display: none !important;
+      }
+      .workspace {
+        display: block;
+      }
+      .canvas-box {
+        border: 1px solid #999;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-badge">家政科 × 視覺藝術</span>
+      <div>
+        <h1>布娃娃設計草稿與裁剪工坊</h1>
+        <p>先選材料、決定裁剪手法與紙樣草稿，再縫合連成你的專屬布娃娃！</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="randomBtn">🎲 隨機靈感</button>
+      <button class="btn" id="resetBtn">↺ 重設草稿</button>
+      <button class="btn btn-teal" id="downloadBtn">💾 下載設計圖 (PNG)</button>
+      <button class="btn" id="printBtn">🖨️ 列印草稿</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- 左側控制面板 -->
+    <section class="panel">
+      <div class="step-title">
+        <span>步驟一：選擇設計部位</span>
+        <span style="font-size:12px;">點選切換部位</span>
+      </div>
+
+      <div class="part-tabs" id="partTabs">
+        <button class="part-tab active" data-part="hair"><span class="icon">💇</span>頭髮</button>
+        <button class="part-tab" data-part="head"><span class="icon">😊</span>頭部</button>
+        <button class="part-tab" data-part="body"><span class="icon">👕</span>身體</button>
+        <button class="part-tab" data-part="limbs"><span class="icon">🦵</span>手腳</button>
+        <button class="part-tab" data-part="stitch"><span class="icon">🪡</span>縫法</button>
+      </div>
+
+      <!-- 動態控制區 -->
+      <div id="controlsContainer"></div>
+    </section>
+
+    <!-- 右側畫布與草稿清單 -->
+    <section class="stage-panel">
+      <div class="stage-toolbar">
+        <div class="mode-switch">
+          <button class="mode-btn active" id="modeDraftBtn">✂️ 1. 視藝草稿（裁剪紙樣）</button>
+          <button class="mode-btn" id="modeDollBtn">🧸 2. 縫合完成（布娃娃）</button>
+        </div>
+        <button class="btn btn-primary" id="assembleActionBtn">🪡 縫合組裝成布娃娃！</button>
+      </div>
+
+      <div class="canvas-box">
+        <div class="status-banner" id="statusBanner">草稿模式：正在預覽各部位裁剪紙樣與材料</div>
+        <input type="text" class="doll-name-input" id="dollNameInput" value="我的小布娃娃草稿" placeholder="輸入作品名稱..." />
+
+        <!-- SVG 畫布 -->
+        <svg id="dollSvg" viewBox="0 0 700 500" xmlns="http://www.w3.org/2000/svg">
+          <defs id="svgDefs"></defs>
+
+          <!-- 背景裁剪尺標線 (僅草稿模式顯示) -->
+          <g id="draftGuides" class="draft-annotation">
+            <rect x="18" y="18" width="664" height="464" rx="14" fill="none" stroke="#3f8f8b" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.45" />
+            <text x="34" y="466" font-size="12" fill="#3f8f8b" font-weight="700">比例參考格：1 格 ≈ 1 cm ｜ 虛線代表縫份 (Seam Allowance 0.5–1 cm)</text>
+          </g>
+
+          <!-- 1. 手腳組 (底層) -->
+          <g id="groupLimbs" class="doll-part-group"></g>
+
+          <!-- 2. 身體組 -->
+          <g id="groupBody" class="doll-part-group"></g>
+
+          <!-- 3. 頭部組 -->
+          <g id="groupHead" class="doll-part-group"></g>
+
+          <!-- 4. 頭髮組 -->
+          <g id="groupHair" class="doll-part-group"></g>
+
+          <!-- 5. 草稿標註文字與裁剪線 -->
+          <g id="draftLabels" class="draft-annotation"></g>
+        </svg>
+      </div>
+
+      <!-- 家政科材料與裁剪規格表 -->
+      <div class="spec-card">
+        <div class="spec-header">
+          <h3>📋 製作企劃與材料裁剪清單</h3>
+          <span style="font-size:12px; color:var(--muted);">做布娃娃前的預定設計規格</span>
+        </div>
+        <div class="spec-grid" id="specGrid"></div>
+        <div class="tools-tip" id="toolsTip"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ========= 資料庫定義 =========
+    const MATERIALS = {
+      cotton:   { name: "純棉素色布", desc: "透氣好縫，適合初學者" },
+      polka:    { name: "波點棉布",   desc: "活潑可愛圖案" },
+      plaid:    { name: "格紋布",     desc: "經典學院或田園風格" },
+      stripe:   { name: "條紋棉布",   desc: "線條感鮮明" },
+      denim:    { name: "牛仔布",     desc: "厚實耐拉扯，適合身體或褲腳" },
+      felt:     { name: "不織布",     desc: "不散邊、免鎖邊，易剪裁" },
+      linen:    { name: "亞麻布",     desc: "自然手作質感" }
+    };
+
+    const HAIR_MATERIALS = {
+      yarn:     { name: "毛線 (紗線)", desc: "立體蓬鬆，可綁辮子" },
+      feltHair: { name: "不織布片",    desc: "平整好剪出瀏海造型" },
+      ribbon:   { name: "絲帶織帶",    desc: "光滑有光澤，適合蝴蝶結" },
+      fleece:   { name: "捲曲羊羔絨",  desc: "柔軟蓬鬆捲髮效果" }
+    };
+
+    const HAIR_STYLES = {
+      bob:      { name: "齊瀏海短髮", cut: "前後片對稱圓弧裁剪" },
+      pigtails: { name: "雙馬尾辮",   cut: "頂部束紮＋左右分股編織" },
+      curly:    { name: "蓬鬆捲捲頭", cut: "多層半圓疊加縫製" },
+      bun:      { name: "可愛丸子頭", cut: "包覆式髮片＋頂部球狀捲縫" }
+    };
+
+    const HEAD_CUTS = {
+      round:    { name: "經典圓形紙樣", cut: "兩片圓形正反對縫留返口" },
+      oval:     { name: "鵝蛋修長臉",   cut: "橢圓立體紙樣＋下巴收省" },
+      chubby:   { name: "包子圓潤臉",   cut: "寬弧雙片拼接，填充較飽滿" }
+    };
+
+    const FACE_STYLES = {
+      button:   { name: "紐扣眼＋微笑繡線" },
+      wink:     { name: "眨眼俏皮刺繡" },
+      sweet:    { name: "豆豆眼＋腮紅貼布" }
+    };
+
+    const BODY_CUTS = {
+      classic:  { name: "經典梯形身",   cut: "兩片梯形紙樣對縫" },
+      dress:    { name: "A字連衣裙剪裁", cut: "上窄下寬裙襬裁剪" },
+      overall:  { name: "連身吊帶褲剪裁", cut: "雙布拼貼＋肩帶裝飾" },
+      patchwork:{ name: "百納拼布剪裁", cut: "左右兩塊異色布先拼接再剪型" }
+    };
+
+    const LIMB_CUTS = {
+      straight: { name: "直筒圓頭裁剪", cut: "長條對折縫合後翻面塞棉" },
+      jointed:  { name: "紐扣可動關節", cut: "四肢獨立縫製，用線貫穿紐扣固定" },
+      socks:    { name: "拼色襪子剪裁", cut: "手腳尾端拼接對比色布料" }
+    };
+
+    const STITCH_STYLES = {
+      running:  { name: "平針縫 (Running Stitch)", desc: "等距虛線縫合，最基本且快捷", dash: "6 5" },
+      blanket:  { name: "鎖邊縫 / 毛邊縫 (Blanket)", desc: "外露邊緣裝飾針法，防散邊又美觀", dash: "3 3" },
+      back:     { name: "回針縫 (Backstitch)", desc: "緊密牢固，適合需要填充飽滿棉花的部位", dash: "none" }
+    };
+
+    const PALETTE = {
+      skin:   ["#FDE2C8", "#F7CBA4", "#E5B28A", "#C98D63", "#FFF1E6", "#E8DFD5"],
+      hair:   ["#4A3525", "#8B5A2B", "#E0A952", "#D95D4E", "#2F3640", "#E88BB4", "#6B8E9B"],
+      fabric: ["#E06D53", "#F2B84B", "#5B9A8B", "#4F7CAC", "#D484A5", "#8D7B68", "#F4EDE2", "#92B47A"]
+    };
+
+    // ========= 預設遊戲狀態 =========
+    const DEFAULT_STATE = {
+      mode: "draft", // "draft" | "doll"
+      activePart: "hair",
+      hair:  { material: "yarn",   color: "#4A3525", style: "pigtails" },
+      head:  { material: "cotton", color: "#FDE2C8", cut: "round", face: "button" },
+      body:  { material: "plaid",  color: "#E06D53", cut: "dress" },
+      limbs: { material: "cotton", color: "#FDE2C8", accentColor: "#4F7CAC", cut: "jointed" },
+      stitch:{ type: "blanket", threadColor: "#FFFFFF" }
+    };
+
+    let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+    // ========= DOM 參照 =========
+    const partTabs = document.getElementById("partTabs");
+    const controlsContainer = document.getElementById("controlsContainer");
+    const modeDraftBtn = document.getElementById("modeDraftBtn");
+    const modeDollBtn = document.getElementById("modeDollBtn");
+    const assembleActionBtn = document.getElementById("assembleActionBtn");
+    const statusBanner = document.getElementById("statusBanner");
+    const dollNameInput = document.getElementById("dollNameInput");
+
+    const svgDefs = document.getElementById("svgDefs");
+    const groupLimbs = document.getElementById("groupLimbs");
+    const groupBody = document.getElementById("groupBody");
+    const groupHead = document.getElementById("groupHead");
+    const groupHair = document.getElementById("groupHair");
+    const draftGuides = document.getElementById("draftGuides");
+    const draftLabels = document.getElementById("draftLabels");
+    const specGrid = document.getElementById("specGrid");
+    const toolsTip = document.getElementById("toolsTip");
+
+    // ========= 顏色輔助函數 =========
+    function shadeColor(hex, percent) {
+      let num = parseInt(hex.replace("#", ""), 16);
+      let r = Math.min(255, Math.max(0, (num >> 16) + percent));
+      let g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + percent));
+      let b = Math.min(255, Math.max(0, (num & 0x0000FF) + percent));
+      return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    function swatchStyle(matKey, color) {
+      if (matKey === "polka") {
+        return `background-color:${color}; background-image: radial-gradient(rgba(255,255,255,0.75) 20%, transparent 22%); background-size: 8px 8px;`;
+      }
+      if (matKey === "plaid") {
+        return `background-color:${color}; background-image: linear-gradient(rgba(255,255,255,0.35) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.35) 2px, transparent 2px); background-size: 8px 8px;`;
+      }
+      if (matKey === "stripe") {
+        return `background: repeating-linear-gradient(45deg, ${color}, ${color} 4px, rgba(255,255,255,0.5) 4px, rgba(255,255,255,0.5) 8px);`;
+      }
+      if (matKey === "denim") {
+        return `background-color:${color}; background-image: repeating-linear-gradient(-45deg, rgba(0,0,0,0.12), rgba(0,0,0,0.12) 2px, transparent 2px, transparent 4px);`;
+      }
+      if (matKey === "felt" || matKey === "feltHair") {
+        return `background-color:${color}; box-shadow: inset 0 0 6px rgba(0,0,0,0.2);`;
+      }
+      if (matKey === "yarn") {
+        return `background: repeating-linear-gradient(90deg, ${color}, ${color} 3px, ${shadeColor(color, -25)} 3px, ${shadeColor(color, -25)} 5px);`;
+      }
+      return `background-color:${color};`;
+    }
+
+    // ========= 生成 SVG 布料材質 Pattern =========
+    function buildPatterns() {
+      const configs = [
+        { id: "pat-head",  mat: state.head.material,  color: state.head.color },
+        { id: "pat-body",  mat: state.body.material,  color: state.body.color },
+        { id: "pat-body-alt", mat: state.body.material, color: shadeColor(state.body.color, -32) },
+        { id: "pat-limbs", mat: state.limbs.material, color: state.limbs.color },
+        { id: "pat-limbs-sock", mat: "stripe", color: state.limbs.accentColor },
+        { id: "pat-hair",  mat: state.hair.material,  color: state.hair.color }
+      ];
+
+      let defsHTML = `
+        <filter id="dollShadow" x="-10%" y="-10%" width="125%" height="125%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#3c342e" flood-opacity="0.16"/>
+        </filter>
+      `;
+
+      configs.forEach(c => {
+        const light = shadeColor(c.color, 38);
+        const dark = shadeColor(c.color, -28);
+
+        if (c.mat === "polka") {
+          defsHTML += `
+            <pattern id="${c.id}" width="18" height="18" patternUnits="userSpaceOnUse">
+              <rect width="18" height="18" fill="${c.color}"/>
+              <circle cx="5" cy="5" r="2.6" fill="#ffffff" opacity="0.72"/>
+              <circle cx="14" cy="14" r="2.6" fill="#ffffff" opacity="0.72"/>
+            </pattern>`;
+        } else if (c.mat === "plaid") {
+          defsHTML += `
+            <pattern id="${c.id}" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="${c.color}"/>
+              <rect x="0" y="0" width="20" height="6" fill="#ffffff" opacity="0.25"/>
+              <rect x="0" y="0" width="6" height="20" fill="#ffffff" opacity="0.25"/>
+              <line x1="0" y1="14" x2="20" y2="14" stroke="${dark}" stroke-width="1.5" opacity="0.45"/>
+              <line x1="14" y1="0" x2="14" y2="20" stroke="${dark}" stroke-width="1.5" opacity="0.45"/>
+            </pattern>`;
+        } else if (c.mat === "stripe") {
+          defsHTML += `
+            <pattern id="${c.id}" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(25)">
+              <rect width="14" height="14" fill="${c.color}"/>
+              <rect width="6" height="14" fill="#ffffff" opacity="0.42"/>
+            </pattern>`;
+        } else if (c.mat === "denim") {
+          defsHTML += `
+            <pattern id="${c.id}" width="8" height="8" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="${c.color}"/>
+              <path d="M0 8 L8 0 M-2 2 L2 -2 M6 10 L10 6" stroke="${light}" stroke-width="1" opacity="0.25"/>
+              <path d="M0 4 L4 0" stroke="${dark}" stroke-width="0.8" opacity="0.2"/>
+            </pattern>`;
+        } else if (c.mat === "linen") {
+          defsHTML += `
+            <pattern id="${c.id}" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="${c.color}"/>
+              <line x1="0" y1="3" x2="10" y2="3" stroke="${dark}" stroke-width="0.6" opacity="0.22"/>
+              <line x1="4" y1="0" x2="4" y2="10" stroke="${dark}" stroke-width="0.6" opacity="0.22"/>
+            </pattern>`;
+        } else if (c.mat === "felt" || c.mat === "feltHair") {
+          defsHTML += `
+            <pattern id="${c.id}" width="12" height="12" patternUnits="userSpaceOnUse">
+              <rect width="12" height="12" fill="${c.color}"/>
+              <circle cx="3" cy="4" r="0.8" fill="${dark}" opacity="0.25"/>
+              <circle cx="9" cy="9" r="0.9" fill="${light}" opacity="0.3"/>
+            </pattern>`;
+        } else if (c.mat === "yarn") {
+          defsHTML += `
+            <pattern id="${c.id}" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="${c.color}"/>
+              <path d="M0 3 Q5 0 10 3 M0 8 Q5 5 10 8" fill="none" stroke="${dark}" stroke-width="1.6" opacity="0.45"/>
+            </pattern>`;
+        } else if (c.mat === "ribbon") {
+          defsHTML += `
+            <pattern id="${c.id}" width="16" height="16" patternUnits="userSpaceOnUse">
+              <rect width="16" height="16" fill="${c.color}"/>
+              <rect x="0" y="3" width="16" height="4" fill="#ffffff" opacity="0.28"/>
+            </pattern>`;
+        } else if (c.mat === "fleece") {
+          defsHTML += `
+            <pattern id="${c.id}" width="14" height="14" patternUnits="userSpaceOnUse">
+              <rect width="14" height="14" fill="${c.color}"/>
+              <circle cx="4" cy="5" r="3" fill="none" stroke="${dark}" stroke-width="1.2" opacity="0.35"/>
+              <circle cx="11" cy="10" r="3" fill="none" stroke="${light}" stroke-width="1.2" opacity="0.35"/>
+            </pattern>`;
+        } else {
+          // cotton
+          defsHTML += `
+            <pattern id="${c.id}" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="${c.color}"/>
+            </pattern>`;
+        }
+      });
+
+      svgDefs.innerHTML = defsHTML;
+    }
+
+    // ========= 繪製左邊控制面板 =========
+    function renderControls() {
+      const p = state.activePart;
+      let html = "";
+
+      if (p === "hair") {
+        html += `
+          <div class="control-group">
+            <div class="control-label">頭髮材料選擇 <span class="hint">決定質感與立體度</span></div>
+            <div class="option-grid">
+              ${Object.entries(HAIR_MATERIALS).map(([k, v]) => `
+                <button class="choice-card ${state.hair.material === k ? "selected" : ""}" onclick="updateState('hair','material','${k}')">
+                  <span class="swatch" style="${swatchStyle(k, state.hair.color)}"></span>
+                  <span>${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">頭髮顏色</div>
+            <div class="color-row">
+              ${PALETTE.hair.map(c => `
+                <button class="color-dot ${state.hair.color === c ? "selected" : ""}" style="background:${c};" onclick="updateState('hair','color','${c}')"></button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">髮型與裁剪手法</div>
+            <div class="option-grid">
+              ${Object.entries(HAIR_STYLES).map(([k, v]) => `
+                <button class="choice-card ${state.hair.style === k ? "selected" : ""}" onclick="updateState('hair','style','${k}')">
+                  <span>✂️ ${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } else if (p === "head") {
+        html += `
+          <div class="control-group">
+            <div class="control-label">頭部布料選擇 <span class="hint">臉部建議淺色柔滑布料</span></div>
+            <div class="option-grid">
+              ${Object.entries(MATERIALS).map(([k, v]) => `
+                <button class="choice-card ${state.head.material === k ? "selected" : ""}" onclick="updateState('head','material','${k}')">
+                  <span class="swatch" style="${swatchStyle(k, state.head.color)}"></span>
+                  <span>${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">頭部布色 (膚色/造型色)</div>
+            <div class="color-row">
+              ${PALETTE.skin.map(c => `
+                <button class="color-dot ${state.head.color === c ? "selected" : ""}" style="background:${c};" onclick="updateState('head','color','${c}')"></button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">頭部紙樣裁剪</div>
+            <div class="option-grid">
+              ${Object.entries(HEAD_CUTS).map(([k, v]) => `
+                <button class="choice-card ${state.head.cut === k ? "selected" : ""}" onclick="updateState('head','cut','${k}')">
+                  <span>📐 ${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">五官製作手法</div>
+            <div class="option-grid">
+              ${Object.entries(FACE_STYLES).map(([k, v]) => `
+                <button class="choice-card ${state.head.face === k ? "selected" : ""}" onclick="updateState('head','face','${k}')">
+                  <span>😊 ${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } else if (p === "body") {
+        html += `
+          <div class="control-group">
+            <div class="control-label">身體布料選擇 <span class="hint">可選圖案布展現風格</span></div>
+            <div class="option-grid">
+              ${Object.entries(MATERIALS).map(([k, v]) => `
+                <button class="choice-card ${state.body.material === k ? "selected" : ""}" onclick="updateState('body','material','${k}')">
+                  <span class="swatch" style="${swatchStyle(k, state.body.color)}"></span>
+                  <span>${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">身體布料主色</div>
+            <div class="color-row">
+              ${PALETTE.fabric.map(c => `
+                <button class="color-dot ${state.body.color === c ? "selected" : ""}" style="background:${c};" onclick="updateState('body','color','${c}')"></button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">身體裁剪手法 (服裝版型)</div>
+            <div class="option-grid">
+              ${Object.entries(BODY_CUTS).map(([k, v]) => `
+                <button class="choice-card ${state.body.cut === k ? "selected" : ""}" onclick="updateState('body','cut','${k}')">
+                  <span>✂️ ${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } else if (p === "limbs") {
+        html += `
+          <div class="control-group">
+            <div class="control-label">手腳布料選擇</div>
+            <div class="option-grid">
+              ${Object.entries(MATERIALS).map(([k, v]) => `
+                <button class="choice-card ${state.limbs.material === k ? "selected" : ""}" onclick="updateState('limbs','material','${k}')">
+                  <span class="swatch" style="${swatchStyle(k, state.limbs.color)}"></span>
+                  <span>${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">手腳布色</div>
+            <div class="color-row">
+              ${PALETTE.skin.concat(["#4F7CAC", "#E06D53"]).map(c => `
+                <button class="color-dot ${state.limbs.color === c ? "selected" : ""}" style="background:${c};" onclick="updateState('limbs','color','${c}')"></button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">手腳裁剪與連接手法</div>
+            <div class="option-grid">
+              ${Object.entries(LIMB_CUTS).map(([k, v]) => `
+                <button class="choice-card ${state.limbs.cut === k ? "selected" : ""}" onclick="updateState('limbs','cut','${k}')">
+                  <span>🪡 ${v.name}</span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          ${state.limbs.cut === "socks" ? `
+            <div class="control-group">
+              <div class="control-label">拼色襪子配色</div>
+              <div class="color-row">
+                ${PALETTE.fabric.map(c => `
+                  <button class="color-dot ${state.limbs.accentColor === c ? "selected" : ""}" style="background:${c};" onclick="updateState('limbs','accentColor','${c}')"></button>
+                `).join("")}
+              </div>
+            </div>
+          ` : ""}
+        `;
+      } else if (p === "stitch") {
+        html += `
+          <div class="control-group">
+            <div class="control-label">預定縫合針法 <span class="hint">顯示於邊緣縫線</span></div>
+            <div class="option-grid" style="grid-template-columns:1fr;">
+              ${Object.entries(STITCH_STYLES).map(([k, v]) => `
+                <button class="choice-card ${state.stitch.type === k ? "selected" : ""}" onclick="updateState('stitch','type','${k}')">
+                  <span>🪡 <strong>${v.name}</strong><br><small style="color:var(--muted);font-weight:500;">${v.desc}</small></span>
+                </button>
+              `).join("")}
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="control-label">繡線 / 縫線顏色</div>
+            <div class="color-row">
+              ${["#FFFFFF", "#3C342E", "#D95D4E", "#F2B84B", "#4F7CAC", "#E88BB4"].map(c => `
+                <button class="color-dot ${state.stitch.threadColor === c ? "selected" : ""}" style="background:${c};" onclick="updateState('stitch','threadColor','${c}')"></button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      controlsContainer.innerHTML = html;
+    }
+
+    // ========= 繪製布娃娃 / 紙樣 SVG =========
+    function renderDollSVG() {
+      buildPatterns();
+
+      const isDraft = state.mode === "draft";
+      const stitchObj = STITCH_STYLES[state.stitch.type];
+      const stitchColor = state.stitch.threadColor;
+      const stitchDash = stitchObj.dash === "none" ? "" : `stroke-dasharray="${stitchObj.dash}"`;
+      const seamAllowance = isDraft
+        ? `stroke="#3f8f8b" stroke-width="1.6" stroke-dasharray="5 4" fill="none"`
+        : `stroke="${stitchColor}" stroke-width="2" ${stitchDash} fill="none" opacity="0.88"`;
+
+      // ---- 1. 頭部形狀 ----
+      let headRx = 58, headRy = 54;
+      if (state.head.cut === "oval") { headRx = 50; headRy = 60; }
+      if (state.head.cut === "chubby") { headRx = 64; headRy = 52; }
+
+      let faceHTML = "";
+      if (state.head.face === "button") {
+        faceHTML = `
+          <circle cx="-20" cy="-4" r="6" fill="#2f2722"/>
+          <circle cx="-22" cy="-6" r="1.3" fill="#fff"/>
+          <circle cx="-18" cy="-2" r="1.3" fill="#fff"/>
+          <circle cx="20" cy="-4" r="6" fill="#2f2722"/>
+          <circle cx="18" cy="-6" r="1.3" fill="#fff"/>
+          <circle cx="22" cy="-2" r="1.3" fill="#fff"/>
+          <path d="M-12 16 Q0 27 12 16" fill="none" stroke="#5a3b2e" stroke-width="2.6" stroke-linecap="round"/>
+          <ellipse cx="-29" cy="9" rx="8" ry="4.5" fill="#f08a82" opacity="0.45"/>
+          <ellipse cx="29" cy="9" rx="8" ry="4.5" fill="#f08a82" opacity="0.45"/>
+        `;
+      } else if (state.head.face === "wink") {
+        faceHTML = `
+          <circle cx="-20" cy="-4" r="5" fill="#2f2722"/>
+          <circle cx="-21.5" cy="-5.5" r="1.5" fill="#fff"/>
+          <path d="M13 -4 Q20 -11 27 -4" fill="none" stroke="#2f2722" stroke-width="2.8" stroke-linecap="round"/>
+          <path d="M-10 15 Q0 25 10 15" fill="none" stroke="#d95d4e" stroke-width="2.6" stroke-linecap="round"/>
+          <ellipse cx="-29" cy="8" rx="7.5" ry="4" fill="#f08a82" opacity="0.5"/>
+          <ellipse cx="29" cy="8" rx="7.5" ry="4" fill="#f08a82" opacity="0.5"/>
+        `;
+      } else {
+        faceHTML = `
+          <ellipse cx="-19" cy="-4" rx="4.2" ry="5.5" fill="#2f2722"/>
+          <ellipse cx="19" cy="-4" rx="4.2" ry="5.5" fill="#2f2722"/>
+          <circle cx="0" cy="5" r="3" fill="#e5887d"/>
+          <path d="M-9 17 Q0 23 9 17" fill="none" stroke="#5a3b2e" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="-30" cy="9" r="8" fill="#f29991" opacity="0.52"/>
+          <circle cx="30" cy="9" r="8" fill="#f29991" opacity="0.52"/>
+        `;
+      }
+
+      groupHead.innerHTML = `
+        <g filter="url(#dollShadow)">
+          <ellipse cx="0" cy="0" rx="${headRx}" ry="${headRy}" fill="url(#pat-head)" stroke="#4c4038" stroke-width="2"/>
+          <ellipse cx="0" cy="0" rx="${headRx - 5}" ry="${headRy - 5}" ${seamAllowance}/>
+          ${isDraft ? `<ellipse cx="0" cy="0" rx="${headRx + 7}" ry="${headRy + 7}" fill="none" stroke="#3f8f8b" stroke-width="1.3" stroke-dasharray="4 4"/>` : ""}
+          ${faceHTML}
+        </g>
+      `;
+
+      // ---- 2. 頭髮形狀 ----
+      let hairHTML = "";
+      const hs = state.hair.style;
+      if (hs === "bob") {
+        hairHTML = `
+          <path d="M-60 -6 C-62 -56, -28 -74, 0 -74 C28 -74, 62 -56, 60 -6 L56 26 C46 22, 46 -12, 36 -28 C18 -20, -18 -20, -36 -28 C-46 -12, -46 22, -56 26 Z"
+                fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2"/>
+          <path d="M-54 -8 C-56 -50, -24 -68, 0 -68 C24 -68, 56 -50, 54 -8" ${seamAllowance}/>
+        `;
+      } else if (hs === "pigtails") {
+        hairHTML = `
+          <path d="M-52 -24 C-78 -24, -92 14, -76 48 C-68 58, -52 50, -50 28 C-48 8, -46 -12, -52 -24 Z" fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2"/>
+          <path d="M52 -24 C78 -24, 92 14, 76 48 C68 58, 52 50, 50 28 C48 8, 46 -12, 52 -24 Z" fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2"/>
+          <path d="M-56 -12 C-54 -56, -24 -72, 0 -72 C24 -72, 54 -56, 56 -12 C34 -24, 14 -34, 0 -22 C-14 -34, -34 -24, -56 -12 Z"
+                fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2"/>
+          <circle cx="-54" cy="-16" r="6" fill="#d96b52" stroke="#fff" stroke-width="1.5"/>
+          <circle cx="54" cy="-16" r="6" fill="#d96b52" stroke="#fff" stroke-width="1.5"/>
+        `;
+      } else if (hs === "curly") {
+        hairHTML = `
+          <g fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2">
+            <circle cx="-48" cy="-24" r="20"/>
+            <circle cx="-30" cy="-48" r="22"/>
+            <circle cx="0" cy="-56" r="24"/>
+            <circle cx="30" cy="-48" r="22"/>
+            <circle cx="48" cy="-24" r="20"/>
+            <circle cx="-54" cy="4" r="16"/>
+            <circle cx="54" cy="4" r="16"/>
+          </g>
+        `;
+      } else if (hs === "bun") {
+        hairHTML = `
+          <circle cx="0" cy="-76" r="24" fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2"/>
+          <path d="M-57 -10 C-56 -54, -26 -68, 0 -68 C26 -68, 56 -54, 57 -10 C35 -26, 12 -32, 0 -24 C-12 -32, -35 -26, -57 -10 Z"
+                fill="url(#pat-hair)" stroke="#3d3028" stroke-width="2"/>
+          <rect x="-14" y="-58" width="28" height="7" rx="3" fill="#d96b52" stroke="#fff" stroke-width="1.2"/>
+        `;
+      }
+
+      groupHair.innerHTML = `<g filter="url(#dollShadow)">${hairHTML}</g>`;
+
+      // ---- 3. 身體形狀 ----
+      let bodyHTML = "";
+      const bc = state.body.cut;
+      if (bc === "classic") {
+        bodyHTML = `
+          <path d="M-34 -52 L34 -52 L44 54 Q0 62 -44 54 Z" fill="url(#pat-body)" stroke="#4c4038" stroke-width="2"/>
+          <path d="M-29 -47 L29 -47 L38 48 Q0 55 -38 48 Z" ${seamAllowance}/>
+          <circle cx="0" cy="-22" r="4.5" fill="#fff" stroke="#4c4038" stroke-width="1.5"/>
+          <circle cx="0" cy="4" r="4.5" fill="#fff" stroke="#4c4038" stroke-width="1.5"/>
+        `;
+      } else if (bc === "dress") {
+        bodyHTML = `
+          <path d="M-32 -52 L32 -52 L64 62 Q0 72 -64 62 Z" fill="url(#pat-body)" stroke="#4c4038" stroke-width="2"/>
+          <path d="M-27 -47 L27 -47 L57 56 Q0 65 -57 56 Z" ${seamAllowance}/>
+          <path d="M-20 -52 Q0 -34 20 -52" fill="#fffdf8" stroke="#4c4038" stroke-width="1.5"/>
+          <path d="M-38 -12 L38 -12" stroke="#ffffff" stroke-width="3" stroke-dasharray="4 3" opacity="0.8"/>
+        `;
+      } else if (bc === "overall") {
+        bodyHTML = `
+          <path d="M-34 -52 L34 -52 L46 58 Q0 66 -46 58 Z" fill="url(#pat-body)" stroke="#4c4038" stroke-width="2"/>
+          <path d="M-26 -52 L-26 -14 L26 -14 L26 -52" fill="none" stroke="#ffffff" stroke-width="6" opacity="0.35"/>
+          <rect x="-24" y="-22" width="48" height="44" rx="6" fill="url(#pat-body-alt)" stroke="#4c4038" stroke-width="1.6"/>
+          <rect x="-13" y="-6" width="26" height="18" rx="4" fill="#fff" opacity="0.45" stroke="#4c4038" stroke-width="1.2"/>
+          <circle cx="-18" cy="-16" r="3.5" fill="#f2b84b" stroke="#4c4038" stroke-width="1"/>
+          <circle cx="18" cy="-16" r="3.5" fill="#f2b84b" stroke="#4c4038" stroke-width="1"/>
+        `;
+      } else if (bc === "patchwork") {
+        bodyHTML = `
+          <path d="M-34 -52 L0 -52 L0 59 Q-24 58 -46 54 Z" fill="url(#pat-body)" stroke="#4c4038" stroke-width="2"/>
+          <path d="M0 -52 L34 -52 L46 54 Q24 58 0 59 Z" fill="url(#pat-body-alt)" stroke="#4c4038" stroke-width="2"/>
+          <line x1="0" y1="-50" x2="0" y2="56" stroke="${stitchColor}" stroke-width="2.2" stroke-dasharray="5 4"/>
+          <path d="M-29 -47 L29 -47 L40 49 Q0 54 -40 49 Z" ${seamAllowance}/>
+        `;
+      }
+
+      const bodyDraftBox = isDraft
+        ? `<path d="M-40 -58 L40 -58 L70 68 L-70 68 Z" fill="none" stroke="#3f8f8b" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.6"/>`
+        : "";
+
+      groupBody.innerHTML = `<g filter="url(#dollShadow)">${bodyDraftBox}${bodyHTML}</g>`;
+
+      // ---- 4. 手腳形狀 ----
+      const isJointed = state.limbs.cut === "jointed";
+      const isSocks = state.limbs.cut === "socks";
+
+      function makeArm(side) {
+        const dir = side === "left" ? -1 : 1;
+        const rot = isDraft ? 0 : (side === "left" ? 26 : -26);
+        const cx = isDraft ? (side === "left" ? -160 : 160) : (dir * 52);
+        const cy = isDraft ? -10 : -22;
+        return `
+          <g transform="translate(${cx}, ${cy}) rotate(${rot})">
+            <rect x="-15" y="-12" width="30" height="76" rx="15" fill="url(#pat-limbs)" stroke="#4c4038" stroke-width="2"/>
+            ${isSocks ? `<path d="M-14 42 L14 42 L14 49 A15 15 0 0 1 -14 49 Z" fill="url(#pat-limbs-sock)" stroke="#4c4038" stroke-width="1.4"/>` : ""}
+            <rect x="-11" y="-8" width="22" height="68" rx="11" ${seamAllowance}/>
+            ${isJointed ? `<circle cx="0" cy="4" r="5.5" fill="#fffdf8" stroke="#4c4038" stroke-width="1.5"/><circle cx="-1.5" cy="4" r="1" fill="#4c4038"/><circle cx="1.5" cy="4" r="1" fill="#4c4038"/>` : ""}
+          </g>
+        `;
+      }
+
+      function makeLeg(side) {
+        const dir = side === "left" ? -1 : 1;
+        const cx = isDraft ? (side === "left" ? -70 : 70) : (dir * 24);
+        const cy = isDraft ? 120 : 62;
+        return `
+          <g transform="translate(${cx}, ${cy})">
+            <rect x="-17" y="-10" width="34" height="86" rx="17" fill="url(#pat-limbs)" stroke="#4c4038" stroke-width="2"/>
+            ${isSocks ? `<path d="M-16 44 L16 44 L16 59 A17 17 0 0 1 -16 59 Z" fill="url(#pat-limbs-sock)" stroke="#4c4038" stroke-width="1.5"/>` : ""}
+            <rect x="-13" y="-6" width="26" height="78" rx="13" ${seamAllowance}/>
+            ${isJointed ? `<circle cx="0" cy="6" r="6" fill="#fffdf8" stroke="#4c4038" stroke-width="1.5"/><circle cx="-1.8" cy="6" r="1" fill="#4c4038"/><circle cx="1.8" cy="6" r="1" fill="#4c4038"/>` : ""}
+          </g>
+        `;
+      }
+
+      groupLimbs.innerHTML = `<g filter="url(#dollShadow)">${makeArm("left")}${makeArm("right")}${makeLeg("left")}${makeLeg("right")}</g>`;
+
+      // ---- 5. 設定草稿拆解 vs 縫合組裝 座標變換 ----
+      if (isDraft) {
+        // 紙樣拆解擺放於工作墊上
+        groupHair.setAttribute("transform", "translate(175, 115) scale(0.92)");
+        groupHead.setAttribute("transform", "translate(350, 120) scale(0.95)");
+        groupBody.setAttribute("transform", "translate(535, 140) scale(0.92)");
+        groupLimbs.setAttribute("transform", "translate(350, 290) scale(0.9)");
+
+        draftGuides.style.opacity = "1";
+        draftLabels.style.opacity = "1";
+
+        draftLabels.innerHTML = `
+          <g font-size="13" font-weight="700" fill="#3c342e">
+            <rect x="90" y="192" width="170" height="36" rx="8" fill="#ffffff" stroke="#e5dccf"/>
+            <text x="175" y="214" text-anchor="middle">✂️ 頭髮：${HAIR_MATERIALS[state.hair.material].name}</text>
+
+            <rect x="270" y="192" width="160" height="36" rx="8" fill="#ffffff" stroke="#e5dccf"/>
+            <text x="350" y="214" text-anchor="middle">📐 頭部：${MATERIALS[state.head.material].name}</text>
+
+            <rect x="445" y="215" width="180" height="36" rx="8" fill="#ffffff" stroke="#e5dccf"/>
+            <text x="535" y="237" text-anchor="middle">👕 身體：${MATERIALS[state.body.material].name}</text>
+
+            <rect x="235" y="424" width="230" height="34" rx="8" fill="#ffffff" stroke="#e5dccf"/>
+            <text x="350" y="446" text-anchor="middle">🪡 手腳紙樣 ×4：${MATERIALS[state.limbs.material].name}</text>
+
+            <!-- 連接箭頭提示 -->
+            <path d="M235 120 L270 120" stroke="#d96b52" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+          </g>
+        `;
+      } else {
+        // 縫合組裝成完整布娃娃！
+        groupLimbs.setAttribute("transform", "translate(350, 295) scale(1.02)");
+        groupBody.setAttribute("transform", "translate(350, 275) scale(1.02)");
+        groupHead.setAttribute("transform", "translate(350, 158) scale(1.02)");
+        groupHair.setAttribute("transform", "translate(350, 158) scale(1.02)");
+
+        draftGuides.style.opacity = "0";
+        draftLabels.style.opacity = "0";
+      }
+
+      renderSpecSummary();
+    }
+
+    // ========= 更新下方家政材料清單 =========
+    function renderSpecSummary() {
+      const items = [
+        {
+          title: "1. 頭髮設計",
+          lines: `材料：${HAIR_MATERIALS[state.hair.material].name}<br>裁剪：${HAIR_STYLES[state.hair.style].cut}`
+        },
+        {
+          title: "2. 頭部設計",
+          lines: `布料：${MATERIALS[state.head.material].name}<br>紙樣：${HEAD_CUTS[state.head.cut].name}<br>五官：${FACE_STYLES[state.head.face].name}`
+        },
+        {
+          title: "3. 身體設計",
+          lines: `布料：${MATERIALS[state.body.material].name}<br>版型：${BODY_CUTS[state.body.cut].name}<br>做法：${BODY_CUTS[state.body.cut].cut}`
+        },
+        {
+          title: "4. 手腳與針法",
+          lines: `布料：${MATERIALS[state.limbs.material].name}<br>手法：${LIMB_CUTS[state.limbs.cut].name}<br>針法：${STITCH_STYLES[state.stitch.type].name}`
+        }
+      ];
+
+      specGrid.innerHTML = items.map(i => `
+        <div class="spec-item">
+          <strong>${i.title}</strong>
+          <div>${i.lines}</div>
+        </div>
+      `).join("");
+
+      const extraTools = [];
+      if (state.head.face === "button" || state.limbs.cut === "jointed") extraTools.push("紐扣若干顆");
+      if (state.hair.material === "yarn") extraTools.push("毛線與毛線針");
+      extraTools.push("布用剪刀、珠針、縫衣針線、PP棉填充物、水消筆/粉餅（畫紙樣用）");
+
+      toolsTip.innerHTML = `<strong>🧰 家政課堂工具建議：</strong>${extraTools.join("、")}。記得剪布時預留 0.5–1 cm 縫份！`;
+    }
+
+    // ========= 狀態更新函數 =========
+    window.updateState = function(part, key, value) {
+      state[part][key] = value;
+      renderControls();
+      renderDollSVG();
+    };
+
+    function setMode(newMode) {
+      state.mode = newMode;
+      modeDraftBtn.classList.toggle("active", newMode === "draft");
+      modeDollBtn.classList.toggle("active", newMode === "doll");
+
+      if (newMode === "draft") {
+        statusBanner.textContent = "草稿模式：正在預覽各部位裁剪紙樣與材料";
+        assembleActionBtn.textContent = "🪡 縫合組裝成布娃娃！";
+      } else {
+        statusBanner.textContent = "完成預覽：各紙樣已按預定針法縫合連在一起！";
+        assembleActionBtn.textContent = "✂️ 回到草稿修改紙樣";
+      }
+      renderDollSVG();
+    }
+
+    // ========= 事件監聽 =========
+    partTabs.addEventListener("click", (e) => {
+      const btn = e.target.closest(".part-tab");
+      if (!btn) return;
+      document.querySelectorAll(".part-tab").forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      state.activePart = btn.dataset.part;
+      renderControls();
+    });
+
+    modeDraftBtn.addEventListener("click", () => setMode("draft"));
+    modeDollBtn.addEventListener("click", () => setMode("doll"));
+    assembleActionBtn.addEventListener("click", () => {
+      setMode(state.mode === "draft" ? "doll" : "draft");
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      const currentPart = state.activePart;
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      state.activePart = currentPart;
+      setMode("draft");
+      renderControls();
+    });
+
+    document.getElementById("randomBtn").addEventListener("click", () => {
+      const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+      state.hair.material = pick(Object.keys(HAIR_MATERIALS));
+      state.hair.color    = pick(PALETTE.hair);
+      state.hair.style    = pick(Object.keys(HAIR_STYLES));
+      state.head.material = pick(Object.keys(MATERIALS));
+      state.head.color    = pick(PALETTE.skin);
+      state.head.cut      = pick(Object.keys(HEAD_CUTS));
+      state.head.face     = pick(Object.keys(FACE_STYLES));
+      state.body.material = pick(Object.keys(MATERIALS));
+      state.body.color    = pick(PALETTE.fabric);
+      state.body.cut      = pick(Object.keys(BODY_CUTS));
+      state.limbs.material= pick(Object.keys(MATERIALS));
+      state.limbs.color   = state.head.color;
+      state.limbs.accentColor = pick(PALETTE.fabric);
+      state.limbs.cut     = pick(Object.keys(LIMB_CUTS));
+      state.stitch.type   = pick(Object.keys(STITCH_STYLES));
+      renderControls();
+      renderDollSVG();
+    });
+
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+    // 匯出 PNG 草稿圖
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      const svgEl = document.getElementById("dollSvg");
+      const serializer = new XMLSerializer();
+      const svgStr = serializer.serializeToString(svgEl);
+      const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 1050;
+        canvas.height = 820;
+        const ctx = canvas.getContext("2d");
+
+        // 紙張底色
+        ctx.fillStyle = "#fffef9";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 標題與作品名稱
+        ctx.fillStyle = "#3c342e";
+        ctx.font = "bold 24px sans-serif";
+        ctx.fillText(`布娃娃設計圖：${dollNameInput.value || "我的布娃娃"}`, 40, 46);
+
+        ctx.fillStyle = "#7a6f66";
+        ctx.font = "16px sans-serif";
+        ctx.fillText(
+          `頭髮(${HAIR_MATERIALS[state.hair.material].name}) ｜ 頭(${MATERIALS[state.head.material].name}) ｜ 身(${MATERIALS[state.body.material].name}) ｜ 手腳(${MATERIALS[state.limbs.material].name})`,
+          40, 76
+        );
+
+        ctx.drawImage(img, 25, 95, 1000, 710);
+
+        const pngUrl = canvas.toDataURL("image/png");
+        const a = document.createElement("a");
+        a.href = pngUrl;
+        a.download = `${(dollNameInput.value || "ragdoll-draft").trim()}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    });
+
+    // 初次啟動
+    renderControls();
+    renderDollSVG();
+  </script>
+</body>
+</html>

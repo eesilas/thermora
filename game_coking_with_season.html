@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家政科模擬廚房：百變調味大師</title>
+<style>
+  :root {
+    --bg: #FFF9F0;
+    --card: #FFFFFF;
+    --primary: #E85D04;
+    --primary-light: #FFE8D6;
+    --secondary: #2A9D8F;
+    --text: #332924;
+    --muted: #7D6E66;
+    --border: #EFE2D3;
+    --shadow: 0 8px 24px rgba(100, 60, 20, 0.08);
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: "PingFang HK", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  header {
+    background: linear-gradient(135deg, #F48C06, #E85D04);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(232, 93, 4, 0.2);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn-ghost {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(255,255,255,0.3);
+  }
+
+  .container {
+    max-width: 1050px;
+    margin: 24px auto;
+    padding: 0 16px;
+  }
+
+  /* 步驟進度條 */
+  .stepper {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .step-pill {
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: #EFE2D3;
+    color: var(--muted);
+    font-weight: bold;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.3s;
+  }
+
+  .step-pill.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(232, 93, 4, 0.25);
+  }
+
+  .step-pill.done {
+    background: var(--secondary);
+    color: white;
+  }
+
+  /* 卡片設計 */
+  .panel {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: none;
+    animation: fadeIn 0.35s ease;
+  }
+
+  .panel.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-title {
+    margin: 0 0 8px 0;
+    font-size: 1.35rem;
+    color: var(--primary);
+  }
+
+  .section-desc {
+    margin: 0 0 20px 0;
+    color: var(--muted);
+  }
+
+  /* 步驟一：揀食材 */
+  .ingredient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .ing-card {
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #FFFCF8;
+  }
+
+  .ing-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: 0 6px 16px rgba(232, 93, 4, 0.12);
+  }
+
+  .ing-card.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
+  }
+
+  .ing-emoji {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .ing-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+
+  .ing-tip {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  /* 步驟二：烹飪區 */
+  .cook-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 800px) {
+    .cook-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* 鑊同煮食視覺效果 */
+  .kitchen-stage {
+    background: #2B2D42;
+    border-radius: 18px;
+    padding: 20px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    min-height: 410px;
+  }
+
+  .stage-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+  }
+
+  .wok-container {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wok-pan {
+    width: 210px;
+    height: 210px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #555A6E, #222533 75%);
+    border: 8px solid #161822;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.5), inset 0 4px 12px rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.15s ease;
+  }
+
+  .wok-pan.stirring {
+    animation: stirShake 0.35s ease;
+  }
+
+  @keyframes stirShake {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-8px, 4px) rotate(-5deg); }
+    50% { transform: translate(8px, -4px) rotate(5deg); }
+    75% { transform: translate(-4px, -2px) rotate(-2deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+  }
+
+  .wok-handle {
+    position: absolute;
+    right: -45px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 18px;
+    background: #8D5524;
+    border-radius: 0 10px 10px 0;
+    border: 2px solid #5C3616;
+  }
+
+  .wok-food {
+    font-size: 4.5rem;
+    z-index: 2;
+    transition: filter 0.3s ease, transform 0.2s ease;
+    user-select: none;
+  }
+
+  .sauce-pool {
+    position: absolute;
+    width: 145px;
+    height: 145px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 1;
+  }
+
+  .fire-glow {
+    position: absolute;
+    bottom: -10px;
+    width: 160px;
+    height: 24px;
+    background: radial-gradient(ellipse at center, #FF6B00, #FF0000 60%, transparent 75%);
+    filter: blur(6px);
+    opacity: 0.7;
+    animation: flicker 0.8s infinite alternate;
+  }
+
+  @keyframes flicker {
+    from { opacity: 0.55; transform: scaleX(0.95); }
+    to { opacity: 0.95; transform: scaleX(1.06); }
+  }
+
+  .floating-msg {
+    position: absolute;
+    top: 40%;
+    font-weight: bold;
+    font-size: 1.05rem;
+    color: #FFD166;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+    animation: floatUp 1s ease forwards;
+    z-index: 10;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0) scale(0.9); }
+    100% { opacity: 0; transform: translateY(-55px) scale(1.1); }
+  }
+
+  /* 進度與操作掣 */
+  .cook-progress-box {
+    width: 100%;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+  }
+
+  .bar-bg {
+    width: 100%;
+    height: 10px;
+    background: rgba(255,255,255,0.18);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #FFD166, #06D6A0);
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+
+  .stage-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-stir {
+    flex: 1;
+    background: #FFD166;
+    color: #332924;
+  }
+  .btn-stir:hover { background: #FFC233; }
+
+  .btn-serve {
+    flex: 1;
+    background: #06D6A0;
+    color: #073B4C;
+  }
+  .btn-serve:hover { background: #05B88A; }
+
+  /* 調味料面板 */
+  .seasoning-area {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .seasoning-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 480px) {
+    .seasoning-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .season-btn {
+    background: #FFF9F2;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.15s;
+    position: relative;
+  }
+
+  .season-btn:hover {
+    border-color: var(--primary);
+    background: #FFF0E0;
+  }
+
+  .season-btn .s-icon {
+    font-size: 1.6rem;
+    display: block;
+  }
+
+  .season-btn .s-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .season-btn .s-unit {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .season-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--primary);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .season-badge.show {
+    display: flex;
+  }
+
+  /* 味道即時分析條 */
+  .flavor-meter-box {
+    background: #FFF9F2;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .flavor-meter-box h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .meter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+  }
+
+  .meter-row:last-child { margin-bottom: 0; }
+
+  .meter-name { width: 42px; font-weight: bold; }
+
+  .meter-track {
+    flex: 1;
+    height: 8px;
+    background: #EADBC8;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .meter-val {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+
+  .added-list {
+    font-size: 0.85rem;
+    color: var(--muted);
+    min-height: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .chip {
+    background: var(--primary-light);
+    color: #B34700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
+  .utility-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-small {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .btn-small:hover { background: #F5ECE1; }
+
+  /* 步驟三：上碟結果 */
+  .result-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 24px;
+    align-items: center;
+  }
+
+  @media (max-width: 750px) {
+    .result-layout { grid-template-columns: 1fr; }
+  }
+
+  .plate-box {
+    background: radial-gradient(circle, #FFFBF5 0%, #F4E6D4 100%);
+    border-radius: 20px;
+    padding: 30px 20px;
+    text-align: center;
+    border: 2px dashed #DEC8AE;
+  }
+
+  .plate {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 14px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12), inset 0 0 0 12px #F7F7F7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .plate-emoji {
+    font-size: 4.5rem;
+    line-height: 1;
+  }
+
+  .plate-garnish {
+    font-size: 1.4rem;
+    margin-top: -10px;
+  }
+
+  .stars {
+    font-size: 1.6rem;
+    color: #FFB703;
+    letter-spacing: 3px;
+  }
+
+  .dish-title {
+    font-size: 1.7rem;
+    margin: 0 0 6px 0;
+    color: var(--primary);
+  }
+
+  .dish-subtitle {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .feedback-card {
+    background: #FFF9F2;
+    border-left: 5px solid var(--secondary);
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+
+  .feedback-card.warn {
+    border-left-color: #E63946;
+    background: #FFF5F5;
+  }
+
+  .home-ec-tip {
+    background: #EEF8F6;
+    border: 1px solid #C5E8E1;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #1D5C53;
+    margin-bottom: 18px;
+  }
+
+  /* 過往紀錄 */
+  .history-section {
+    margin-top: 28px;
+    background: white;
+    border-radius: 16px;
+    padding: 18px 24px;
+    border: 1px solid var(--border);
+  }
+
+  .history-list {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .history-item {
+    min-width: 180px;
+    background: #FFFBF5;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  /* 彈出小貼士 */
+  .hint-box {
+    background: #FFF4CC;
+    border: 1px solid #FFE082;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    color: #6B4F00;
+    display: none;
+  }
+  .hint-box.show { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍳 家政科模擬廚房：百變調味大師</h1>
+  <div class="header-controls">
+    <button class="btn-ghost" id="soundToggle" onclick="toggleSound()">🔊 音效：開</button>
+    <button class="btn-ghost" onclick="resetAll()">🔄 重新開始</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- 步驟指示 -->
+  <div class="stepper">
+    <div class="step-pill active" id="pill-1">1. 揀選食材</div>
+    <div class="step-pill" id="pill-2">2. 落鑊調味</div>
+    <div class="step-pill" id="pill-3">3. 上碟試味</div>
+  </div>
+
+  <!-- 步驟一：選擇食材 -->
+  <section class="panel active" id="step-1">
+    <h2 class="section-title">第一步：今日想煮咩主菜呀？</h2>
+    <p class="section-desc">請揀選一種主要食材，唔同肉類同海鮮配搭唔同調味料，煮出嚟嘅風味都會唔一樣㗎！</p>
+
+    <div class="ingredient-grid" id="ingredientGrid">
+      <!-- 由 JS 動態生成 -->
+    </div>
+  </section>
+
+  <!-- 步驟二：烹飪與調味 -->
+  <section class="panel" id="step-2">
+    <div class="utility-row" style="margin-bottom: 12px;">
+      <div>
+        <h2 class="section-title" style="margin:0;">第二步：烹調「<span id="currentIngName"></span>」</h2>
+        <span style="font-size:0.9rem; color:var(--muted);">落唔同調味料同醬汁，再用鑊鏟兜炒至熟透！</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-small" onclick="toggleHint()">💡 調味靈感</button>
+        <button class="btn-small" onclick="goStep(1)">⬅️ 換過第樣食材</button>
+      </div>
+    </div>
+
+    <div class="hint-box" id="hintBox" style="margin-bottom: 14px;">
+      <strong>👨‍🍳 廚師靈感參考：</strong><br>
+      • <strong>酸甜開胃（糖醋/咕嚕）</strong>：糖 + 白醋 + 茄汁 + 少少鹽<br>
+      • <strong>香濃惹味（照燒/豉油皇）</strong>：豉油 + 糖 + 麻油 + 蒜蓉薑蔥<br>
+      • <strong>鮮香家常（蠔油風味）</strong>：蠔油 + 蒜蓉薑蔥 + 少少糖 + 麻油<br>
+      • <strong>惹味椒鹽風</strong>：鹽 + 胡椒粉 + 蒜蓉薑蔥
+    </div>
+
+    <div class="cook-layout">
+      <!-- 左邊：炒鑊區域 -->
+      <div class="kitchen-stage">
+        <div class="stage-header">
+          <span>🔥 爐火加熱中</span>
+          <span id="cookStatusText" style="color:#FFD166; font-weight:bold;">生料（未炒勻）</span>
+        </div>
+
+        <div class="wok-container" id="wokContainer">
+          <div class="fire-glow"></div>
+          <div class="wok-pan" id="wokPan">
+            <div class="wok-handle"></div>
+            <div class="sauce-pool" id="saucePool"></div>
+            <div class="wok-food" id="wokFood">🍗</div>
+          </div>
+        </div>
+
+        <div class="cook-progress-box">
+          <div class="progress-label">
+            <span>熟度（最少兜炒 3 次至熟透）</span>
+            <span id="cookPercent">0%</span>
+          </div>
+          <div class="bar-bg">
+            <div class="bar-fill" id="cookBar"></div>
+          </div>
+        </div>
+
+        <div class="stage-actions">
+          <button class="btn btn-stir" onclick="stirWok()">🥄 鑊鏟兜炒 (+35%)</button>
+          <button class="btn btn-serve" onclick="finishCooking()">🍽️ 熄火上碟</button>
+        </div>
+      </div>
+
+      <!-- 右邊：調味料選擇區 -->
+      <div class="seasoning-area">
+        <div class="utility-row">
+          <strong style="font-size:1rem;">🧂 選擇調味料（點擊加入鑊中）</strong>
+          <button class="btn-small" onclick="clearSeasonings()">🗑️ 清空調味料</button>
+        </div>
+
+        <div class="seasoning-grid" id="seasoningGrid">
+          <!-- 由 JS 動態生成 -->
+        </div>
+
+        <div class="added-list" id="addedList">
+          <span>已落調味：</span><span style="font-style:italic;">未落任何調味料</span>
+        </div>
+
+        <!-- 即時味道分析 -->
+        <div class="flavor-meter-box">
+          <h4>📊 即時味道平衡分析 <span style="font-size:0.78rem; color:var(--muted); font-weight:normal;">(理想係各種味道適中)</span></h4>
+          <div class="meter-row">
+            <span class="meter-name">鹹味</span>
+            <div class="meter-track"><div class="meter-val" id="bar-salty" style="background:#457B9D;"></div></div>
+          </div>
+          <div class="meter-row">
+            <span class="meter-name">甜味</span>
+            <div class="meter-track"><div class="meter-val" id="bar-sweet" style="background:#F4A261;"></div></div>
+          </div>
+          <div class="meter-row">
+            <span class="meter-name">酸味</span>
+            <div class="meter-track"><div class="meter-val" id="bar-sour" style="background:#E9C46A;"></div></div>
+          </div>
+          <div class="meter-row">
+            <span class="meter-name">鮮味</span>
+            <div class="meter-track"><div class="meter-val" id="bar-umami" style="background:#2A9D8F;"></div></div>
+          </div>
+          <div class="meter-row">
+            <span class="meter-name">香氣</span>
+            <div class="meter-track"><div class="meter-val" id="bar-aroma" style="background:#E76F51;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 步驟三：結果上碟 -->
+  <section class="panel" id="step-3">
+    <div class="result-layout">
+      <div class="plate-box">
+        <div class="plate">
+          <div class="plate-emoji" id="resEmoji">🍗</div>
+          <div class="plate-garnish" id="resGarnish">✨</div>
+        </div>
+        <div class="stars" id="resStars">★★★★★</div>
+        <div style="font-weight:bold; margin-top:4px;" id="resScoreText">95 / 100 分</div>
+      </div>
+
+      <div>
+        <h2 class="dish-title" id="resDishName">菜式名稱</h2>
+        <div class="dish-subtitle" id="resFlavorTags">味道特色：鹹鮮適中、香氣撲鼻</div>
+
+        <div class="feedback-card" id="resFeedbackCard">
+          <strong>👩‍🏫 家政老師試味評語：</strong>
+          <p id="resFeedback" style="margin:6px 0 0 0;"></p>
+        </div>
+
+        <div class="home-ec-tip">
+          <strong>📚 家政知識小貼士：</strong>
+          <span id="resTip"></span>
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button class="btn" style="background:var(--primary); color:white;" onclick="cookAgainSame()">🍳 再煮一次（調整調味）</button>
+          <button class="btn" style="background:var(--secondary); color:white;" onclick="resetAll()">🛒 揀過第二樣食材</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 廚藝紀錄 -->
+  <div class="history-section" id="historySection" style="display:none;">
+    <h3 style="margin:0 0 12px 0; font-size:1.05rem;">📖 今日煮食紀錄</h3>
+    <div class="history-list" id="historyList"></div>
+  </div>
+</div>
+
+<script>
+  // ====== 1. 資料定義 ======
+  const INGREDIENTS = [
+    {
+      id: 'chicken',
+      name: '嫩滑雞球',
+      emoji: '🍗',
+      desc: '肉質嫩滑易入味，適合照燒、糖醋、蠔油或豉油煮法。',
+      tip: '雞肉本身味道較清淡，烹調前加少少豉油、糖同胡椒粉醃一醃會更入味！'
+    },
+    {
+      id: 'pork',
+      name: '香煎豬肉片',
+      emoji: '🥩',
+      desc: '肉味香濃有嚼勁，整咕嚕肉、蒜香或蜜汁風味一流！',
+      tip: '豬肉要徹底煮熟（100%熟度），避免食到生肉；酸甜醬汁最能解豬肉嘅油膩感。'
+    },
+    {
+      id: 'beef',
+      name: '鮮嫩牛肉柳',
+      emoji: '🐄',
+      desc: '牛味濃郁，配搭蠔油、豉油、蒜蓉或者黑椒胡椒粉最夾！',
+      tip: '炒牛肉講求「快手兜炒」，過熟會變韌；用蠔油同少少糖可以提升牛肉嘅鮮甜度。'
+    },
+    {
+      id: 'shrimp',
+      name: '爽口大鮮蝦',
+      emoji: '🦐',
+      desc: '海鮮自帶鮮甜味，適合豉油皇、蒜蓉、茄汁或椒鹽煮法。',
+      tip: '海鮮本身已經有天然鮮味同微鹹度，唔需要落太多鹽，少許豉油或茄汁已經好夠味！'
+    }
+  ];
+
+  const SEASONINGS = [
+    { id: 'soy', name: '豉油 (生抽)', icon: '🍶', unit: '1茶匙', color: '#4A2511', salty: 2.2, sweet: 0.4, sour: 0, umami: 2.0, aroma: 0.8 },
+    { id: 'salt', name: '幼鹽', icon: '🧂', unit: '半茶匙', color: '#FFFFFF', salty: 3.2, sweet: 0, sour: 0, umami: 0, aroma: 0 },
+    { id: 'sugar', name: '白砂糖', icon: '🍬', unit: '1茶匙', color: '#FFE6B3', salty: 0, sweet: 3.0, sour: 0, umami: 0.2, aroma: 0 },
+    { id: 'vinegar', name: '白醋', icon: '🍾', unit: '1茶匙', color: '#FFF8DC', salty: 0, sweet: 0, sour: 3.2, umami: 0, aroma: 0.5 },
+    { id: 'oyster', name: '蠔油', icon: '🦪', unit: '1茶匙', color: '#3B1C0A', salty: 1.5, sweet: 1.2, sour: 0, umami: 3.2, aroma: 1.0 },
+    { id: 'ketchup', name: '茄汁', icon: '🍅', unit: '1湯匙', color: '#D62828', salty: 0.8, sweet: 2.0, sour: 2.0, umami: 1.2, aroma: 0.5 },
+    { id: 'sesame', name: '麻油', icon: '🫗', unit: '數滴', color: '#C97A16', salty: 0, sweet: 0, sour: 0, umami: 0.8, aroma: 2.8 },
+    { id: 'pepper', name: '胡椒粉', icon: '🌶️', unit: '少許', color: '#6C757D', salty: 0, sweet: 0, sour: 0, umami: 0, aroma: 2.5 },
+    { id: 'aromatics', name: '蒜蓉薑蔥', icon: '🧄', unit: '1份', color: '#90BE6D', salty: 0, sweet: 0.3, sour: 0, umami: 0.8, aroma: 3.2 }
+  ];
+
+  // ====== 2. 遊戲狀態 ======
+  let state = {
+    ingredient: null,
+    cookProgress: 0,
+    stirCount: 0,
+    added: {}, // { soy: 2, sugar: 1 ... }
+    soundOn: true,
+    history: []
+  };
+
+  // ====== 3. 音效系統 (Web Audio API - 無需外部檔案) ======
+  let audioCtx = null;
+  function playTone(type) {
+    if (!state.soundOn) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+
+      if (type === 'drop') {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 0.12);
+      } else if (type === 'sizzle') {
+        // 模擬白噪音沙沙聲
+        const bufferSize = audioCtx.sampleRate * 0.25;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 3000;
+        const gain = audioCtx.createGain();
+        gain.gain.value = 0.25;
+        noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+        noise.start(now);
+      } else if (type === 'done') {
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.35);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now + idx * 0.08); osc.stop(now + idx * 0.08 + 0.35);
+        });
+      }
+    } catch (e) {}
+  }
+
+  function toggleSound() {
+    state.soundOn = !state.soundOn;
+    document.getElementById('soundToggle').textContent = state.soundOn ? '🔊 音效：開' : '🔇 音效：關';
+  }
+
+  // ====== 4. 初始化介面 ======
+  function init() {
+    const ingGrid = document.getElementById('ingredientGrid');
+    ingGrid.innerHTML = INGREDIENTS.map(ing => `
+      <div class="ing-card" onclick="selectIngredient('${ing.id}')">
+        <span class="ing-emoji">${ing.emoji}</span>
+        <div class="ing-name">${ing.name}</div>
+        <div class="ing-tip">${ing.desc}</div>
+      </div>
+    `).join('');
+
+    const sGrid = document.getElementById('seasoningGrid');
+    sGrid.innerHTML = SEASONINGS.map(s => `
+      <button class="season-btn" onclick="addSeasoning('${s.id}')">
+        <span class="season-badge" id="badge-${s.id}">0</span>
+        <span class="s-icon">${s.icon}</span>
+        <span class="s-name">${s.name}</span>
+        <span class="s-unit">+ ${s.unit}</span>
+      </button>
+    `).join('');
+  }
+
+  function goStep(stepNum) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`step-${stepNum}`).classList.add('active');
+
+    for (let i = 1; i <= 3; i++) {
+      const pill = document.getElementById(`pill-${i}`);
+      pill.classList.remove('active', 'done');
+      if (i < stepNum) pill.classList.add('done');
+      else if (i === stepNum) pill.classList.add('active');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ====== 5. 步驟一：選食材 ======
+  function selectIngredient(id) {
+    state.ingredient = INGREDIENTS.find(i => i.id === id);
+    resetCookingState();
+    document.getElementById('currentIngName').textContent = state.ingredient.name;
+    document.getElementById('wokFood').textContent = state.ingredient.emoji;
+    goStep(2);
+    playTone('drop');
+  }
+
+  function resetCookingState() {
+    state.cookProgress = 0;
+    state.stirCount = 0;
+    state.added = {};
+    updateCookingUI();
+  }
+
+  // ====== 6. 步驟二：調味與兜炒 ======
+  function addSeasoning(id) {
+    const item = SEASONINGS.find(s => s.id === id);
+    state.added[id] = (state.added[id] || 0) + 1;
+    playTone('drop');
+    showFloatText(`+${item.unit} ${item.name}`);
+    updateCookingUI();
+  }
+
+  function clearSeasonings() {
+    state.added = {};
+    updateCookingUI();
+  }
+
+  function stirWok() {
+    state.stirCount++;
+    state.cookProgress = Math.min(130, state.cookProgress + 35);
+    const pan = document.getElementById('wokPan');
+    pan.classList.remove('stirring');
+    void pan.offsetWidth; // trigger reflow
+    pan.classList.add('stirring');
+
+    playTone('sizzle');
+    showFloatText('🔥 沙沙聲兜炒中...');
+    updateCookingUI();
+  }
+
+  function showFloatText(text) {
+    const container = document.getElementById('wokContainer');
+    const el = document.createElement('div');
+    el.className = 'floating-msg';
+    el.textContent = text;
+    el.style.left = (25 + Math.random() * 35) + '%';
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+  }
+
+  function getFlavorProfile() {
+    const f = { salty: 0, sweet: 0, sour: 0, umami: 0, aroma: 0, totalCount: 0 };
+    for (const [id, count] of Object.entries(state.added)) {
+      const s = SEASONINGS.find(x => x.id === id);
+      if (!s) continue;
+      f.salty += s.salty * count;
+      f.sweet += s.sweet * count;
+      f.sour += s.sour * count;
+      f.umami += s.umami * count;
+      f.aroma += s.aroma * count;
+      f.totalCount += count;
+    }
+    return f;
+  }
+
+  function updateCookingUI() {
+    // 熟度進度條
+    const bar = document.getElementById('cookBar');
+    const pctText = document.getElementById('cookPercent');
+    const statusText = document.getElementById('cookStatusText');
+    const foodEl = document.getElementById('wokFood');
+
+    const displayPct = Math.min(100, state.cookProgress);
+    pctText.textContent = state.cookProgress > 105 ? '過火 (小心燶!)' : `${displayPct}%`;
+    bar.style.width = `${displayPct}%`;
+
+    if (state.cookProgress === 0) {
+      statusText.textContent = '生料（請按兜炒）';
+      statusText.style.color = '#FFD166';
+      foodEl.style.filter = 'brightness(1)';
+    } else if (state.cookProgress < 95) {
+      statusText.textContent = '半生熟（繼續兜炒）';
+      statusText.style.color = '#FFD166';
+      foodEl.style.filter = 'brightness(0.96)';
+    } else if (state.cookProgress <= 115) {
+      statusText.textContent = '熟透金黃！可以上碟啦';
+      statusText.style.color = '#06D6A0';
+      foodEl.style.filter = 'saturate(1.2) contrast(1.05)';
+    } else {
+      statusText.textContent = '⚠️ 有啲炒燶咗！快啲上碟！';
+      statusText.style.color = '#FF6B6B';
+      foodEl.style.filter = 'brightness(0.65) contrast(1.2)';
+    }
+
+    // 調味料徽章同已落列表
+    const addedHtml = [];
+    SEASONINGS.forEach(s => {
+      const count = state.added[s.id] || 0;
+      const badge = document.getElementById(`badge-${s.id}`);
+      if (count > 0) {
+        badge.textContent = count;
+        badge.classList.add('show');
+        addedHtml.push(`<span class="chip">${s.icon} ${s.name} ×${count}</span>`);
+      } else {
+        badge.classList.remove('show');
+      }
+    });
+
+    document.getElementById('addedList').innerHTML =
+      addedHtml.length ? `<span>已落調味：</span>${addedHtml.join('')}` : `<span>已落調味：</span><span style="font-style:italic;">未落任何調味料</span>`;
+
+    // 鑊中醬汁顏色視覺
+    const f = getFlavorProfile();
+    const pool = document.getElementById('saucePool');
+    if (f.totalCount === 0) {
+      pool.style.opacity = 0;
+    } else {
+      pool.style.opacity = Math.min(0.75, 0.2 + f.totalCount * 0.1);
+      if ((state.added.ketchup || 0) >= 1) {
+        pool.style.background = 'radial-gradient(circle, rgba(214,40,40,0.85), rgba(160,20,20,0.4))';
+      } else if ((state.added.soy || 0) >= 1 || (state.added.oyster || 0) >= 1) {
+        pool.style.background = 'radial-gradient(circle, rgba(90,40,15,0.85), rgba(50,20,5,0.4))';
+      } else {
+        pool.style.background = 'radial-gradient(circle, rgba(255,215,130,0.5), rgba(200,160,80,0.2))';
+      }
+    }
+
+    // 即時味道條 (滿格定為 8 分)
+    const cap = v => Math.min(100, (v / 8) * 100);
+    document.getElementById('bar-salty').style.width = cap(f.salty) + '%';
+    document.getElementById('bar-sweet').style.width = cap(f.sweet) + '%';
+    document.getElementById('bar-sour').style.width = cap(f.sour) + '%';
+    document.getElementById('bar-umami').style.width = cap(f.umami) + '%';
+    document.getElementById('bar-aroma').style.width = cap(f.aroma) + '%';
+
+    // 如果超標變紅色提示
+    document.getElementById('bar-salty').style.background = f.salty > 7 ? '#E63946' : '#457B9D';
+    document.getElementById('bar-sweet').style.background = f.sweet > 7 ? '#E63946' : '#F4A261';
+    document.getElementById('bar-sour').style.background = f.sour > 7 ? '#E63946' : '#E9C46A';
+  }
+
+  function toggleHint() {
+    document.getElementById('hintBox').classList.toggle('show');
+  }
+
+  // ====== 7. 步驟三：評價同生成菜式 ======
+  function finishCooking() {
+    const f = getFlavorProfile();
+    const ing = state.ingredient;
+    const isCooked = state.cookProgress >= 95;
+    const isBurnt = state.cookProgress > 115;
+
+    let score = 85;
+    let dishName = '';
+    let garnish = '✨';
+    let feedback = [];
+    let isWarn = false;
+
+    // 判斷菜式名稱同風格
+    const hasSoy = (state.added.soy || 0) > 0;
+    const hasOyster = (state.added.oyster || 0) > 0;
+    const hasKetchup = (state.added.ketchup || 0) > 0;
+    const hasVinegar = (state.added.vinegar || 0) > 0;
+    const hasSugar = (state.added.sugar || 0) > 0;
+    const hasSalt = (state.added.salt || 0) > 0;
+    const hasPepper = (state.added.pepper || 0) > 0;
+    const hasAroma = (state.added.aromatics || 0) > 0;
+
+    // 1. 先檢查熟度同極端情況
+    if (!isCooked) {
+      score -= 40;
+      isWarn = true;
+      dishName = `半生熟${ing.name}`;
+      garnish = '⚠️';
+      feedback.push(`你兜炒得唔夠耐呀（熟度只有 ${state.cookProgress}%），肉類/海鮮仲未熟透，食咗會肚痛㗎！`);
+    } else if (isBurnt) {
+      score -= 20;
+      isWarn = true;
+      dishName = `微焦燶邊${ing.name}`;
+      garnish = '💨';
+      feedback.push('炒得有少少過火燶咗少少，下次見熟度夠 100% 就要即刻熄火上碟喇！');
+    }
+
+    // 2. 檢查調味多寡與平衡
+    if (f.totalCount === 0) {
+      score -= 35;
+      isWarn = true;
+      if (!dishName) dishName = `原味白炒${ing.name}`;
+      garnish = '😐';
+      feedback.push('完全無落任何調味料，食落口淡淡哋無咩味道喎，大膽試下加少少豉油或者鹽糖啦！');
+    } else if (f.salty >= 7.5) {
+      score -= 25;
+      isWarn = true;
+      if (!dishName) dishName = `超重口味鹹${ing.name}`;
+      garnish = '💧';
+      feedback.push('嘩，太鹹啦！要飲三大杯水先得！記住豉油同蠔油本身已經好鹹，落咗就唔好再落咁多鹽喇。');
+    } else if (f.sweet >= 7.5 && f.sour < 2) {
+      score -= 20;
+      isWarn = true;
+      if (!dishName) dishName = `甜品級糖漿${ing.name}`;
+      garnish = '🍯';
+      feedback.push('落咗太多糖喇，甜到好似食緊糖水咁！糖通常只需要少少用嚟提鮮，或者要配醋先至平衡到。');
+    } else if (f.sour >= 7.5 && f.sweet < 2) {
+      score -= 20;
+      isWarn = true;
+      if (!dishName) dishName = `酸溜溜${ing.name}`;
+      garnish = '🍋';
+      feedback.push('太酸啦！牙都軟埋！落醋嘅時候記得要加番啲糖去中和酸味（即係「糖醋」原理）。');
+    }
+
+    // 3. 如果一切正常，配對出美味菜式！
+    if (!dishName) {
+      // 酸甜/糖醋系
+      if (f.sweet >= 2.5 && f.sour >= 2.5) {
+        score += 12;
+        garnish = '🍅🌿';
+        const map = {
+          chicken: '酸甜開胃菠蘿雞球',
+          pork: '金字招牌咕嚕肉',
+          beef: '茄汁甜酸炒牛柳',
+          shrimp: '香脆茄汁大蝦'
+        };
+        dishName = map[ing.id];
+        feedback.push('糖同醋/茄汁比例控制得好好，酸甜開胃，色澤紅潤好吸引！');
+      }
+      // 豉油 + 糖 照燒/豉油皇系
+      else if (hasSoy && hasSugar && f.salty <= 6.5) {
+        score += 12;
+        garnish = '🥢✨';
+        const map = {
+          chicken: '蜜汁照燒嫩雞球',
+          pork: '豉油皇蜜汁豬肉',
+          beef: '香甜豉油皇炒牛肉',
+          shrimp: '港式豉油皇煎大蝦'
+        };
+        dishName = map[ing.id];
+        feedback.push('豉油嘅鹹香加上糖嘅焦糖甜味，色香味俱全，送飯一流！');
+      }
+      // 蠔油 + 香氣系
+      else if (hasOyster && (hasAroma || f.aroma >= 2)) {
+        score += 12;
+        garnish = '🥬✨';
+        const map = {
+          chicken: '蒜蓉蠔油滑雞球',
+          pork: '濃香蠔油炒肉片',
+          beef: '茶餐廳必食蠔油牛肉',
+          shrimp: '薑蔥蠔油燜大蝦'
+        };
+        dishName = map[ing.id];
+        feedback.push('蠔油本身鮮味十足，再配埋蒜蓉薑蔥或者麻油，香味撲鼻！');
+      }
+      // 椒鹽/蒜香系
+      else if ((hasSalt || hasSoy) && (hasPepper || hasAroma) && f.salty <= 6.5) {
+        score += 10;
+        garnish = '🧄🌶️';
+        const map = {
+          chicken: '香煎椒鹽蒜香雞球',
+          pork: '惹味椒鹽豬肉片',
+          beef: '黑椒蒜香炒牛柳',
+          shrimp: '避風塘蒜香椒鹽蝦'
+        };
+        dishName = map[ing.id];
+        feedback.push('運用鹽/豉油帶出肉香，加上胡椒粉同蒜蓉薑蔥提香，好有大排檔鑊氣！');
+      }
+      // 一般家常美味系
+      else {
+        score += 5;
+        garnish = '🌿';
+        dishName = `家常秘製炒${ing.name}`;
+        feedback.push('整體調味平均，係一道好食嘅家常小菜！下次可以試下加埋蒜蓉薑蔥或者唔同醬汁，創出更多特色風味。');
+      }
+    }
+
+    // 額外加分項：有落香料（麻油/蒜蓉薑蔥）且味道唔失衡
+    if (!isWarn && f.aroma >= 2.5) {
+      score = Math.min(100, score + 3);
+      feedback.push('👍 仲識得加蒜蓉薑蔥／麻油／胡椒粉去腥增香，好有大廚風範！');
+    }
+
+    score = Math.max(10, Math.min(100, score));
+
+    // 呈現結果
+    document.getElementById('resEmoji').textContent = ing.emoji;
+    document.getElementById('resGarnish').textContent = garnish;
+    document.getElementById('resDishName').textContent = dishName;
+    document.getElementById('resScoreText').textContent = `${score} / 100 分`;
+
+    const starCount = score >= 90 ? 5 : score >= 75 ? 4 : score >= 60 ? 3 : score >= 40 ? 2 : 1;
+    document.getElementById('resStars').textContent = '★'.repeat(starCount) + '☆'.repeat(5 - starCount);
+
+    // 味道標籤
+    const tags = [];
+    if (f.salty >= 2) tags.push(f.salty > 7 ? '過鹹' : '鹹香');
+    if (f.sweet >= 2) tags.push(f.sweet > 7 ? '過甜' : '甘甜');
+    if (f.sour >= 2) tags.push(f.sour > 7 ? '過酸' : '微酸開胃');
+    if (f.umami >= 2.5) tags.push('鮮味十足');
+    if (f.aroma >= 2.5) tags.push('香氣撲鼻');
+    document.getElementById('resFlavorTags').textContent = '味道分析：' + (tags.length ? tags.join('、') : '清淡原味');
+
+    const fbCard = document.getElementById('resFeedbackCard');
+    fbCard.className = isWarn ? 'feedback-card warn' : 'feedback-card';
+    document.getElementById('resFeedback').textContent = feedback.join(' ');
+    document.getElementById('resTip').textContent = ing.tip;
+
+    // 紀錄到歷史
+    state.history.unshift({
+      name: dishName,
+      emoji: ing.emoji,
+      score,
+      stars: starCount
+    });
+    renderHistory();
+
+    playTone('done');
+    goStep(3);
+  }
+
+  function renderHistory() {
+    const sec = document.getElementById('historySection');
+    const list = document.getElementById('historyList');
+    if (state.history.length === 0) {
+      sec.style.display = 'none';
+      return;
+    }
+    sec.style.display = 'block';
+    list.innerHTML = state.history.map((h, i) => `
+      <div class="history-item">
+        <div style="font-size:1.5rem;">${h.emoji}</div>
+        <div style="font-weight:bold; margin:4px 0;">${h.name}</div>
+        <div style="color:#FFB703;">${'★'.repeat(h.stars)}${'☆'.repeat(5 - h.stars)} <span style="color:var(--muted);">(${h.score}分)</span></div>
+      </div>
+    `).join('');
+  }
+
+  function cookAgainSame() {
+    resetCookingState();
+    goStep(2);
+  }
+
+  function resetAll() {
+    state.ingredient = null;
+    resetCookingState();
+    goStep(1);
+  }
+
+  // 啟動
+  init();
+</script>
+
+</body>
+</html>

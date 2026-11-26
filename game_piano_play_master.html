@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鋼琴大師 Piano Master - 互動鋼琴教學遊戲</title>
+<style>
+  :root {
+    --bg-dark: #0f172a;
+    --panel-bg: #1e293b;
+    --accent-cyan: #38bdf8;
+    --accent-pink: #f472b6;
+    --accent-gold: #fbbf24;
+    --accent-green: #4ade80;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+
+  * {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* 頂部控制列 */
+  header {
+    background-color: var(--panel-bg);
+    padding: 12px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #334155;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  select, button {
+    background-color: #0f172a;
+    color: var(--text-main);
+    border: 1px solid #475569;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  select:hover, button:hover {
+    border-color: var(--accent-cyan);
+  }
+
+  button.primary {
+    background: linear-gradient(135deg, #0284c7, #2563eb);
+    border: none;
+    font-weight: 600;
+  }
+
+  button.primary:hover {
+    filter: brightness(1.15);
+  }
+
+  button.danger {
+    background: #be123c;
+    border: none;
+  }
+
+  .stats {
+    display: flex;
+    gap: 18px;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .stat-item span {
+    color: var(--accent-gold);
+    font-size: 1.15rem;
+    margin-left: 4px;
+  }
+
+  /* 遊戲主舞台（瀑布流畫布 + 提示訊息） */
+  .stage {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    background: radial-gradient(circle at center bottom, #1e293b 0%, #0f172a 80%);
+    overflow: hidden;
+    border-left: 1px solid #1e293b;
+    border-right: 1px solid #1e293b;
+  }
+
+  canvas#noteCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* 判定線 */
+  .hit-line {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-pink), transparent);
+    box-shadow: 0 0 12px var(--accent-cyan);
+    pointer-events: none;
+  }
+
+  /* 即時回饋文字 & 教學提示 */
+  .hud-overlay {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  .guide-banner {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #334155;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    backdrop-filter: blur(4px);
+  }
+
+  .guide-banner strong {
+    color: var(--accent-gold);
+  }
+
+  .feedback-text {
+    margin-top: 12px;
+    font-size: 1.8rem;
+    font-weight: 800;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    opacity: 0;
+    transition: transform 0.15s ease-out, opacity 0.2s;
+  }
+
+  .feedback-text.show {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  /* 鋼琴鍵盤區 */
+  .piano-wrapper {
+    width: 100%;
+    max-width: 1000px;
+    height: 210px;
+    margin: 0 auto;
+    position: relative;
+    background: #020617;
+    padding: 6px 4px 12px;
+    border-top: 4px solid #334155;
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+  }
+
+  .piano {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+  }
+
+  .key {
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 10px;
+    transition: transform 0.05s, background 0.08s, box-shadow 0.08s;
+  }
+
+  /* 白鍵 (共10鍵: C4 ~ E5) */
+  .key.white {
+    flex: 1;
+    height: 100%;
+    background: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 90%, #cbd5e1 100%);
+    border: 1px solid #64748b;
+    border-radius: 0 0 8px 8px;
+    margin: 0 1px;
+    color: #334155;
+    z-index: 1;
+  }
+
+  .key.white.active {
+    background: linear-gradient(to bottom, #bae6fd 0%, #38bdf8 100%);
+    transform: translateY(3px);
+    box-shadow: inset 0 -4px 8px rgba(0,0,0,0.2), 0 0 16px var(--accent-cyan);
+    color: #0f172a;
+  }
+
+  /* 黑鍵 */
+  .key.black {
+    position: absolute;
+    top: 0;
+    width: 6%;
+    height: 60%;
+    background: linear-gradient(to bottom, #334155 0%, #0f172a 85%, #020617 100%);
+    border: 1px solid #000;
+    border-radius: 0 0 6px 6px;
+    transform: translateX(-50%);
+    z-index: 2;
+    color: #e2e8f0;
+    box-shadow: 2px 4px 8px rgba(0,0,0,0.6);
+  }
+
+  .key.black.active {
+    background: linear-gradient(to bottom, #f472b6 0%, #be185d 100%);
+    transform: translateX(-50%) translateY(3px);
+    box-shadow: 0 0 16px var(--accent-pink);
+  }
+
+  /* 教學提示發光狀態 */
+  .key.target-hint {
+    box-shadow: inset 0 0 0 3px var(--accent-gold), 0 0 22px var(--accent-gold) !important;
+    animation: pulseGold 0.8s infinite alternate;
+  }
+
+  .key.white.target-hint {
+    background: linear-gradient(to bottom, #fef08a 0%, #fde047 100%);
+  }
+
+  .key.black.target-hint {
+    background: linear-gradient(to bottom, #f59e0b 0%, #b45309 100%);
+  }
+
+  @keyframes pulseGold {
+    from { filter: brightness(1); }
+    to { filter: brightness(1.25); }
+  }
+
+  .key-label-note {
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .key-label-solfege {
+    font-size: 0.72rem;
+    opacity: 0.75;
+    margin-bottom: 4px;
+  }
+
+  .key-label-kbd {
+    font-size: 0.72rem;
+    background: rgba(0,0,0,0.12);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: 700;
+  }
+
+  .key.black .key-label-kbd {
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* 結算彈窗 */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 50;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal.open {
+    display: flex;
+  }
+
+  .modal-card {
+    background: var(--panel-bg);
+    border: 1px solid #475569;
+    border-radius: 16px;
+    padding: 28px 36px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  }
+
+  .modal-card h2 {
+    margin-top: 0;
+    color: var(--accent-gold);
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+    text-align: left;
+    background: #0f172a;
+    padding: 16px;
+    border-radius: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .piano-wrapper { height: 170px; }
+    .key-label-solfege { display: none; }
+    header { padding: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">🎹 鋼琴大師 Piano Master</div>
+
+  <div class="controls">
+    <select id="songSelect" title="選擇曲目">
+      <option value="scale">1. C大調五指音階 (入門)</option>
+      <option value="twinkle" selected>2. 小星星 (新手推薦)</option>
+      <option value="ode">3. 歡樂頌 (貝多芬)</option>
+      <option value="tiger">4. 兩隻老虎 (節奏練習)</option>
+      <option value="birthday">5. 生日快樂歌 (含黑鍵練習)</option>
+    </select>
+
+    <select id="modeSelect" title="學習模式">
+      <option value="practice" selected>🎓 教學模式 (彈對才繼續)</option>
+      <option value="arcade">⚡ 節奏模式 (計分挑戰)</option>
+      <option value="free">🎵 自由彈奏</option>
+    </select>
+
+    <select id="speedSelect" title="速度倍率">
+      <option value="0.7">慢速 (0.7x)</option>
+      <option value="1" selected>標準 (1.0x)</option>
+      <option value="1.3">快速 (1.3x)</option>
+    </select>
+
+    <button id="playBtn" class="primary">▶ 開始練習</button>
+    <button id="stopBtn" class="danger" style="display:none;">■ 停止</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-item">分數<span id="scoreVal">0</span></div>
+    <div class="stat-item">連擊<span id="comboVal">0</span></div>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <div class="hud-overlay">
+    <div class="guide-banner" id="guideText">
+      使用 <strong>滑鼠點擊</strong> 或 <strong>電腦鍵盤 (A ~ ; / W,E,T,Y,U...)</strong> 彈奏！點擊「開始練習」開始教學。
+    </div>
+    <div class="feedback-text" id="feedbackText">PERFECT!</div>
+  </div>
+  <canvas id="noteCanvas"></canvas>
+  <div class="hit-line"></div>
+</div>
+
+<div class="piano-wrapper">
+  <div class="piano" id="piano"></div>
+</div>
+
+<!-- 曲目完成結算視窗 -->
+<div class="modal" id="resultModal">
+  <div class="modal-card">
+    <h2>🎉 演奏完成！</h2>
+    <p id="resultSongName" style="color: var(--text-muted); margin-bottom: 0;"></p>
+    <div class="result-grid">
+      <div>總分：<strong id="resScore" style="color:var(--accent-gold)">0</strong></div>
+      <div>最高連擊：<strong id="resCombo" style="color:var(--accent-cyan)">0</strong></div>
+      <div>Perfect：<strong id="resPerfect" style="color:var(--accent-green)">0</strong></div>
+      <div>Good：<strong id="resGood" style="color:var(--accent-cyan)">0</strong></div>
+      <div>Miss：<strong id="resMiss" style="color:var(--accent-pink)">0</strong></div>
+      <div>準確率：<strong id="resAcc">100%</strong></div>
+    </div>
+    <button class="primary" onclick="closeModalAndRestart()" style="width:100%; padding:12px;">再彈一次</button>
+    <button onclick="closeModal()" style="width:100%; margin-top:8px;">關閉</button>
+  </div>
+</div>
+
+<script>
+/**
+ * 1. 音階與鍵盤定義 (C4 ~ E5，共 17 個琴鍵)
+ */
+const KEYS_CONFIG = [
+  { note: 'C4',  solfege: 'Do',  freq: 261.63, type: 'white', kbd: 'A', whiteIdx: 0 },
+  { note: 'C#4', solfege: '#Do', freq: 277.18, type: 'black', kbd: 'W', posPct: 10 },
+  { note: 'D4',  solfege: 'Re',  freq: 293.66, type: 'white', kbd: 'S', whiteIdx: 1 },
+  { note: 'D#4', solfege: '#Re', freq: 311.13, type: 'black', kbd: 'E', posPct: 20 },
+  { note: 'E4',  solfege: 'Mi',  freq: 329.63, type: 'white', kbd: 'D', whiteIdx: 2 },
+  { note: 'F4',  solfege: 'Fa',  freq: 349.23, type: 'white', kbd: 'F', whiteIdx: 3 },
+  { note: 'F#4', solfege: '#Fa', freq: 369.99, type: 'black', kbd: 'T', posPct: 40 },
+  { note: 'G4',  solfege: 'Sol', freq: 392.00, type: 'white', kbd: 'G', whiteIdx: 4 },
+  { note: 'G#4', solfege: '#Sol',freq: 415.30, type: 'black', kbd: 'Y', posPct: 50 },
+  { note: 'A4',  solfege: 'La',  freq: 440.00, type: 'white', kbd: 'H', whiteIdx: 5 },
+  { note: 'A#4', solfege: 'bSi', freq: 466.16, type: 'black', kbd: 'U', posPct: 60 },
+  { note: 'B4',  solfege: 'Si',  freq: 493.88, type: 'white', kbd: 'J', whiteIdx: 6 },
+  { note: 'C5',  solfege: 'Do+', freq: 523.25, type: 'white', kbd: 'K', whiteIdx: 7 },
+  { note: 'C#5', solfege: '#Do+',freq: 554.37, type: 'black', kbd: 'O', posPct: 80 },
+  { note: 'D5',  solfege: 'Re+', freq: 587.33, type: 'white', kbd: 'L', whiteIdx: 8 },
+  { note: 'D#5', solfege: '#Re+',freq: 622.25, type: 'black', kbd: 'P', posPct: 90 },
+  { note: 'E5',  solfege: 'Mi+', freq: 659.25, type: 'white', kbd: ';', whiteIdx: 9 }
+];
+
+const KEY_MAP_BY_NOTE = {};
+const KEY_MAP_BY_KBD = {};
+KEYS_CONFIG.forEach(k => {
+  KEY_MAP_BY_NOTE[k.note] = k;
+  KEY_MAP_BY_KBD[k.kbd] = k;
+});
+
+/**
+ * 2. 曲庫資料 [音符, 拍數] ('R' 代表休止符)
+ */
+const SONGS = {
+  scale: {
+    name: 'C大調五指音階 (入門)',
+    bpm: 90,
+    seq: [
+      ['C4',1],['D4',1],['E4',1],['F4',1],['G4',2],['F4',1],['E4',1],['D4',1],['C4',2],
+      ['G4',1],['A4',1],['B4',1],['C5',2],['B4',1],['A4',1],['G4',1],['C5',2]
+    ]
+  },
+  twinkle: {
+    name: '小星星 Twinkle Twinkle Little Star',
+    bpm: 100,
+    seq: [
+      ['C4',1],['C4',1],['G4',1],['G4',1],['A4',1],['A4',1],['G4',2],
+      ['F4',1],['F4',1],['E4',1],['E4',1],['D4',1],['D4',1],['C4',2],
+      ['G4',1],['G4',1],['F4',1],['F4',1],['E4',1],['E4',1],['D4',2],
+      ['G4',1],['G4',1],['F4',1],['F4',1],['E4',1],['E4',1],['D4',2],
+      ['C4',1],['C4',1],['G4',1],['G4',1],['A4',1],['A4',1],['G4',2],
+      ['F4',1],['F4',1],['E4',1],['E4',1],['D4',1],['D4',1],['C4',2]
+    ]
+  },
+  ode: {
+    name: '歡樂頌 Ode to Joy',
+    bpm: 108,
+    seq: [
+      ['E4',1],['E4',1],['F4',1],['G4',1],['G4',1],['F4',1],['E4',1],['D4',1],
+      ['C4',1],['C4',1],['D4',1],['E4',1],['E4',1.5],['D4',0.5],['D4',2],
+      ['E4',1],['E4',1],['F4',1],['G4',1],['G4',1],['F4',1],['E4',1],['D4',1],
+      ['C4',1],['C4',1],['D4',1],['E4',1],['D4',1.5],['C4',0.5],['C4',2]
+    ]
+  },
+  tiger: {
+    name: '兩隻老虎',
+    bpm: 110,
+    seq: [
+      ['C4',1],['D4',1],['E4',1],['C4',1], ['C4',1],['D4',1],['E4',1],['C4',1],
+      ['E4',1],['F4',1],['G4',2],         ['E4',1],['F4',1],['G4',2],
+      ['G4',0.5],['A4',0.5],['G4',0.5],['F4',0.5],['E4',1],['C4',1],
+      ['G4',0.5],['A4',0.5],['G4',0.5],['F4',0.5],['E4',1],['C4',1],
+      ['C4',1],['G4',1],['C4',2],         ['C4',1],['G4',1],['C4',2]
+    ]
+  },
+  birthday: {
+    name: '生日快樂歌 (含黑鍵 bSi / U鍵)',
+    bpm: 96,
+    seq: [
+      ['C4',0.75],['C4',0.25],['D4',1],['C4',1],['F4',1],['E4',2],
+      ['C4',0.75],['C4',0.25],['D4',1],['C4',1],['G4',1],['F4',2],
+      ['C4',0.75],['C4',0.25],['C5',1],['A4',1],['F4',1],['E4',1],['D4',2],
+      ['A#4',0.75],['A#4',0.25],['A4',1],['F4',1],['G4',1],['F4',2]
+    ]
+  }
+};
+
+/**
+ * 3. Web Audio API 鋼琴音源合成器
+ */
+let audioCtx = null;
+const activeOscillators = {};
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playTone(note) {
+  initAudio();
+  const keyInfo = KEY_MAP_BY_NOTE[note];
+  if (!keyInfo) return;
+
+  // 若同音已發聲先停止前一個
+  stopTone(note);
+
+  const now = audioCtx.currentTime;
+  const masterGain = audioCtx.createGain();
+  masterGain.connect(audioCtx.destination);
+
+  // 模擬鋼琴包絡 (ADSR): 快速起音、自然衰減
+  masterGain.gain.setValueAtTime(0.001, now);
+  masterGain.gain.linearRampToValueAtTime(0.45, now + 0.015);
+  masterGain.gain.exponentialRampToValueAtTime(0.18, now + 0.35);
+  masterGain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+
+  // 基音 (Triangle) + 泛音 (Sine) 增加鋼琴明亮感
+  const osc1 = audioCtx.createOscillator();
+  osc1.type = 'triangle';
+  osc1.frequency.setValueAtTime(keyInfo.freq, now);
+
+  const osc2 = audioCtx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(keyInfo.freq * 2, now);
+
+  const osc2Gain = audioCtx.createGain();
+  osc2Gain.gain.setValueAtTime(0.25, now);
+
+  osc1.connect(masterGain);
+  osc2.connect(osc2Gain);
+  osc2Gain.connect(masterGain);
+
+  osc1.start(now);
+  osc2.start(now);
+
+  activeOscillators[note] = { osc1, osc2, masterGain };
+}
+
+function stopTone(note) {
+  const active = activeOscillators[note];
+  if (!active || !audioCtx) return;
+
+  const now = audioCtx.currentTime;
+  try {
+    active.masterGain.gain.cancelScheduledValues(now);
+    active.masterGain.gain.setValueAtTime(active.masterGain.gain.value, now);
+    active.masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    active.osc1.stop(now + 0.16);
+    active.osc2.stop(now + 0.16);
+  } catch (e) {}
+  delete activeOscillators[note];
+}
+
+/**
+ * 4. 動態建立鋼琴鍵盤 DOM 與座標對齊
+ */
+const pianoEl = document.getElementById('piano');
+const keyElements = {};
+
+function buildPiano() {
+  pianoEl.innerHTML = '';
+  KEYS_CONFIG.forEach(k => {
+    const el = document.createElement('div');
+    el.className = `key ${k.type}`;
+    el.dataset.note = k.note;
+    if (k.type === 'black') {
+      el.style.left = `${k.posPct}%`;
+    }
+    el.innerHTML = `
+      <span class="key-label-note">${k.note}</span>
+      <span class="key-label-solfege">${k.solfege}</span>
+      <span class="key-label-kbd">${k.kbd}</span>
+    `;
+
+    // 滑鼠與觸控事件
+    el.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      pressKey(k.note);
+    });
+    el.addEventListener('pointerup', () => releaseKey(k.note));
+    el.addEventListener('pointercancel', () => releaseKey(k.note));
+
+    pianoEl.appendChild(el);
+    keyElements[k.note] = el;
+  });
+}
+
+// 取得某音符在 Canvas 上對應的 X 與寬度 (確保跟真實琴鍵 100% 對齊)
+function getKeyRect(note) {
+  const keyEl = keyElements[note];
+  const stageRect = document.getElementById('stage').getBoundingClientRect();
+  const keyRect = keyEl.getBoundingClientRect();
+  return {
+    x: keyRect.left - stageRect.left,
+    w: keyRect.width
+  };
+}
+
+/**
+ * 5. 遊戲狀態與瀑布流引擎
+ */
+const canvas = document.getElementById('noteCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameState = {
+  isPlaying: false,
+  mode: 'practice',
+  songNotes: [],
+  songTime: 0,       // 目前樂曲時間 (秒)
+  lastFrameTime: 0,
+  totalDuration: 0,
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  perfect: 0,
+  good: 0,
+  miss: 0,
+  waitingForNote: null, // 教學模式等待中的音符
+  rafId: null
+};
+
+const LOOKAHEAD_SECONDS = 2.4; // 音符從頂部掉落到底部判定線所需的時間
+
+function resizeCanvas() {
+  const stage = document.getElementById('stage');
+  canvas.width = stage.clientWidth;
+  canvas.height = stage.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+function parseSong(songKey, speedMultiplier) {
+  const song = SONGS[songKey];
+  const secPerBeat = (60 / song.bpm) / speedMultiplier;
+  let currentTime = 1.6; // 開場預留 1.6 秒讓第一個音符落下
+  const notes = [];
+
+  song.seq.forEach(([note, beats]) => {
+    const dur = beats * secPerBeat;
+    if (note !== 'R') {
+      notes.push({
+        note,
+        time: currentTime,
+        duration: dur * 0.88, // 稍微留空隙讓連續同音更明顯
+        hit: false,
+        missed: false
+      });
+    }
+    currentTime += dur;
+  });
+
+  return { notes, totalDuration: currentTime + 1.2 };
+}
+
+function startGame() {
+  initAudio();
+  const mode = document.getElementById('modeSelect').value;
+  if (mode === 'free') {
+    stopGame();
+    updateGuideText('🎵 自由彈奏模式：隨心所欲彈出自己的旋律吧！');
+    return;
+  }
+
+  const songKey = document.getElementById('songSelect').value;
+  const speed = parseFloat(document.getElementById('speedSelect').value);
+  const parsed = parseSong(songKey, speed);
+
+  gameState = {
+    isPlaying: true,
+    mode,
+    songNotes: parsed.notes,
+    songTime: 0,
+    lastFrameTime: performance.now(),
+    totalDuration: parsed.totalDuration,
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    perfect: 0,
+    good: 0,
+    miss: 0,
+    waitingForNote: null,
+    rafId: null
+  };
+
+  updateStatsUI();
+  document.getElementById('playBtn').style.display = 'none';
+  document.getElementById('stopBtn').style.display = 'inline-block';
+  updateGuideText(
+    mode === 'practice'
+      ? '🎓 教學模式：音符落到底線會等待你，彈對發光的琴鍵即可繼續！'
+      : '⚡ 節奏模式：跟著掉落節拍準確彈奏吧！'
+  );
+
+  resizeCanvas();
+  gameState.rafId = requestAnimationFrame(gameLoop);
+}
+
+function stopGame() {
+  gameState.isPlaying = false;
+  if (gameState.rafId) cancelAnimationFrame(gameState.rafId);
+  clearAllTargetHints();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('playBtn').style.display = 'inline-block';
+  document.getElementById('stopBtn').style.display = 'none';
+}
+
+function clearAllTargetHints() {
+  Object.values(keyElements).forEach(el => el.classList.remove('target-hint'));
+}
+
+function gameLoop(now) {
+  if (!gameState.isPlaying) return;
+
+  const dt = Math.min((now - gameState.lastFrameTime) / 1000, 0.1);
+  gameState.lastFrameTime = now;
+
+  // 更新時間軸
+  if (gameState.mode === 'practice') {
+    // 尋找下一個還沒彈到的音符
+    const nextNote = gameState.songNotes.find(n => !n.hit);
+    if (nextNote && gameState.songTime + dt >= nextNote.time) {
+      gameState.songTime = nextNote.time; // 凍結在判定線等待玩家
+      if (gameState.waitingForNote !== nextNote) {
+        gameState.waitingForNote = nextNote;
+        highlightTargetKey(nextNote.note);
+      }
+    } else {
+      gameState.songTime += dt;
+      clearAllTargetHints();
+      gameState.waitingForNote = null;
+    }
+  } else {
+    // 節奏模式：持續前進並檢查 Miss
+    gameState.songTime += dt;
+    gameState.songNotes.forEach(n => {
+      if (!n.hit && !n.missed && gameState.songTime - n.time > 0.28) {
+        n.missed = true;
+        gameState.miss++;
+        gameState.combo = 0;
+        showFeedback('MISS', '#f472b6');
+        updateStatsUI();
+      }
+    });
+  }
+
+  renderNotes();
+
+  // 檢查曲目是否結束
+  const allDone = gameState.songNotes.every(n => n.hit || n.missed);
+  if (allDone && gameState.songTime >= gameState.totalDuration) {
+    finishGame();
+    return;
+  }
+
+  gameState.rafId = requestAnimationFrame(gameLoop);
+}
+
+function highlightTargetKey(note) {
+  clearAllTargetHints();
+  const el = keyElements[note];
+  if (el) el.classList.add('target-hint');
+  const info = KEY_MAP_BY_NOTE[note];
+  updateGuideText(`請彈奏：<strong>${info.note} (${info.solfege})</strong> — 電腦按鍵 <strong>[ ${info.kbd} ]</strong>`);
+}
+
+function renderNotes() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const pxPerSec = canvas.height / LOOKAHEAD_SECONDS;
+
+  // 繪製輔助垂直軌道線
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  KEYS_CONFIG.filter(k => k.type === 'white').forEach(k => {
+    const rect = getKeyRect(k.note);
+    ctx.beginPath();
+    ctx.moveTo(rect.x, 0);
+    ctx.lineTo(rect.x, canvas.height);
+    ctx.stroke();
+  });
+
+  // 繪製掉落中的音符條
+  gameState.songNotes.forEach(n => {
+    if (n.hit) return;
+
+    const timeUntilHit = n.time - gameState.songTime;
+    const noteBottomY = canvas.height - timeUntilHit * pxPerSec;
+    const noteHeight = Math.max(n.duration * pxPerSec, 26);
+    const noteTopY = noteBottomY - noteHeight;
+
+    // 畫面外的音符跳過繪製
+    if (noteBottomY < 0 || noteTopY > canvas.height + 50) return;
+
+    const { x, w } = getKeyRect(n.note);
+    const keyInfo = KEY_MAP_BY_NOTE[n.note];
+    const isBlack = keyInfo.type === 'black';
+    const isWaiting = gameState.waitingForNote === n;
+
+    const pad = isBlack ? 2 : 4;
+    const drawX = x + pad;
+    const drawW = w - pad * 2;
+
+    // 顏色設定
+    let grad = ctx.createLinearGradient(0, noteTopY, 0, noteBottomY);
+    if (isWaiting) {
+      grad.addColorStop(0, '#fde047');
+      grad.addColorStop(1, '#f59e0b');
+    } else if (n.missed) {
+      grad.addColorStop(0, '#475569');
+      grad.addColorStop(1, '#334155');
+    } else if (isBlack) {
+      grad.addColorStop(0, '#f472b6');
+      grad.addColorStop(1, '#db2777');
+    } else {
+      grad.addColorStop(0, '#38bdf8');
+      grad.addColorStop(1, '#0284c7');
+    }
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(drawX, noteTopY, drawW, noteHeight, 8);
+    ctx.fill();
+
+    // 音符標籤文字 (顯示音名與鍵盤按鍵，方便學習)
+    ctx.fillStyle = isWaiting ? '#0f172a' : '#ffffff';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${keyInfo.note} (${keyInfo.kbd})`, drawX + drawW / 2, noteBottomY - 8);
+  });
+}
+
+/**
+ * 6. 按鍵輸入與判定邏輯
+ */
+const pressedKeys = new Set();
+
+function pressKey(note) {
+  if (pressedKeys.has(note)) return;
+  pressedKeys.add(note);
+
+  const el = keyElements[note];
+  if (el) el.classList.add('active');
+  playTone(note);
+
+  if (!gameState.isPlaying) return;
+
+  if (gameState.mode === 'practice') {
+    const waiting = gameState.waitingForNote;
+    if (waiting && waiting.note === note) {
+      waiting.hit = true;
+      gameState.waitingForNote = null;
+      gameState.perfect++;
+      gameState.combo++;
+      gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+      gameState.score += 100;
+      clearAllTargetHints();
+      showFeedback('NICE!', '#4ade80');
+      updateStatsUI();
+    } else if (!waiting) {
+      // 若提前一點點按對即將落下的音符也給予判定
+      const upcoming = gameState.songNotes.find(
+        n => !n.hit && n.note === note && Math.abs(n.time - gameState.songTime) <= 0.25
+      );
+      if (upcoming) {
+        upcoming.hit = true;
+        gameState.perfect++;
+        gameState.combo++;
+        gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+        gameState.score += 100;
+        showFeedback('PERFECT!', '#4ade80');
+        updateStatsUI();
+      }
+    }
+  } else if (gameState.mode === 'arcade') {
+    // 尋找判定視窗內相符的未擊中音符
+    const target = gameState.songNotes.find(
+      n => !n.hit && !n.missed && n.note === note && Math.abs(n.time - gameState.songTime) <= 0.28
+    );
+    if (target) {
+      const diff = Math.abs(target.time - gameState.songTime);
+      target.hit = true;
+      gameState.combo++;
+      gameState.maxCombo = Math.max(gameState.maxCombo, gameState.combo);
+
+      if (diff <= 0.13) {
+        gameState.perfect++;
+        gameState.score += 100 + gameState.combo * 5;
+        showFeedback('PERFECT!', '#4ade80');
+      } else {
+        gameState.good++;
+        gameState.score += 60 + gameState.combo * 2;
+        showFeedback('GOOD', '#38bdf8');
+      }
+      updateStatsUI();
+    }
+  }
+}
+
+function releaseKey(note) {
+  pressedKeys.delete(note);
+  const el = keyElements[note];
+  if (el) el.classList.remove('active');
+  stopTone(note);
+}
+
+// 電腦鍵盤映射 (支援 A~; 與黑鍵 W,E,T,Y,U,O,P)
+window.addEventListener('keydown', e => {
+  if (e.repeat) return;
+  let k = e.key.toUpperCase();
+  if (e.code === 'Semicolon') k = ';';
+  const keyInfo = KEY_MAP_BY_KBD[k];
+  if (keyInfo) {
+    pressKey(keyInfo.note);
+  }
+});
+
+window.addEventListener('keyup', e => {
+  let k = e.key.toUpperCase();
+  if (e.code === 'Semicolon') k = ';';
+  const keyInfo = KEY_MAP_BY_KBD[k];
+  if (keyInfo) {
+    releaseKey(keyInfo.note);
+  }
+});
+
+/**
+ * 7. UI 回饋與結算
+ */
+let feedbackTimer = null;
+function showFeedback(text, color) {
+  const el = document.getElementById('feedbackText');
+  el.textContent = text;
+  el.style.color = color;
+  el.classList.add('show');
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => el.classList.remove('show'), 450);
+}
+
+function updateStatsUI() {
+  document.getElementById('scoreVal').textContent = gameState.score;
+  document.getElementById('comboVal').textContent = gameState.combo;
+}
+
+function updateGuideText(html) {
+  document.getElementById('guideText').innerHTML = html;
+}
+
+function finishGame() {
+  stopGame();
+  const songKey = document.getElementById('songSelect').value;
+  const total = gameState.perfect + gameState.good + gameState.miss;
+  const acc = total > 0 ? Math.round(((gameState.perfect + gameState.good * 0.7) / total) * 100) : 100;
+
+  document.getElementById('resultSongName').textContent = SONGS[songKey].name;
+  document.getElementById('resScore').textContent = gameState.score;
+  document.getElementById('resCombo').textContent = gameState.maxCombo;
+  document.getElementById('resPerfect').textContent = gameState.perfect;
+  document.getElementById('resGood').textContent = gameState.good;
+  document.getElementById('resMiss').textContent = gameState.miss;
+  document.getElementById('resAcc').textContent = `${acc}%`;
+
+  document.getElementById('resultModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('resultModal').classList.remove('open');
+}
+
+function closeModalAndRestart() {
+  closeModal();
+  startGame();
+}
+
+// 綁定按鈕事件
+document.getElementById('playBtn').addEventListener('click', startGame);
+document.getElementById('stopBtn').addEventListener('click', stopGame);
+document.getElementById('modeSelect').addEventListener('change', () => {
+  if (gameState.isPlaying) startGame();
+});
+
+// 初始化
+buildPiano();
+resizeCanvas();
+</script>
+</body>
+</html>

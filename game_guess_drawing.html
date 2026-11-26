@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>藝術流派猜猜看｜名畫鑑賞遊戲</title>
+  <style>
+    :root {
+      --bg-color: #121215;
+      --panel-bg: #1c1c21;
+      --text-main: #f4f1ea;
+      --text-muted: #a6a29a;
+      --accent-gold: #d4af37;
+      --accent-gold-hover: #e5c453;
+      --correct-bg: #1e5631;
+      --correct-border: #3fb950;
+      --wrong-bg: #5c1d24;
+      --wrong-border: #f85149;
+      --btn-bg: #27272e;
+      --btn-hover: #35353f;
+      --border-subtle: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-color);
+      background-image: radial-gradient(circle at 50% 0%, #24242b 0%, #121215 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 32px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 880px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 頂部標題與計分列 */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .title-group h1 {
+      font-family: "Noto Serif TC", "PMingLiU", serif;
+      font-size: 1.65rem;
+      letter-spacing: 0.06em;
+      color: var(--accent-gold);
+    }
+
+    .title-group p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--panel-bg);
+      padding: 8px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      font-size: 0.9rem;
+    }
+
+    .stat-item span {
+      color: var(--accent-gold);
+      font-weight: 700;
+      margin-left: 4px;
+    }
+
+    .btn-reset-top {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-reset-top:hover {
+      color: var(--text-main);
+      border-color: var(--accent-gold);
+    }
+
+    /* 中間畫作展示區 */
+    .gallery-stage {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .frame-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      height: 380px;
+      background: #0b0b0d;
+      border: 8px solid #2b2418;
+      box-shadow:
+        inset 0 0 24px rgba(0, 0, 0, 0.9),
+        0 0 0 2px rgba(212, 175, 55, 0.35),
+        0 12px 28px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .painting-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .painting-img.loaded {
+      opacity: 1;
+    }
+
+    .loader {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(212, 175, 55, 0.2);
+      border-top-color: var(--accent-gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 揭曉答案區塊 */
+    .result-panel {
+      width: 100%;
+      max-width: 640px;
+      padding: 16px 20px;
+      border-radius: 10px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .result-panel.show {
+      display: flex;
+    }
+
+    .result-panel.correct {
+      background: rgba(30, 86, 49, 0.3);
+      border: 1px solid var(--correct-border);
+    }
+
+    .result-panel.wrong {
+      background: rgba(92, 29, 36, 0.35);
+      border: 1px solid var(--wrong-border);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .result-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .result-panel.correct .result-badge { color: #6ee787; }
+    .result-panel.wrong .result-badge { color: #ff857d; }
+
+    .artwork-info h2 {
+      font-family: "Noto Serif TC", serif;
+      font-size: 1.15rem;
+      color: var(--text-main);
+    }
+
+    .artwork-meta {
+      font-size: 0.88rem;
+      color: var(--accent-gold);
+      margin: 2px 0 6px;
+    }
+
+    .artwork-desc {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: #d6d3cb;
+    }
+
+    .btn-play-again {
+      background: var(--accent-gold);
+      color: #141416;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s;
+      align-self: flex-end;
+    }
+
+    .btn-play-again:hover {
+      background: var(--accent-gold-hover);
+      transform: translateY(-1px);
+    }
+
+    /* 下方流派選擇按鈕區 */
+    .prompt-text {
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .option-btn {
+      background: var(--btn-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 14px 10px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .option-btn small {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .option-btn:hover:not(:disabled) {
+      background: var(--btn-hover);
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+
+    .option-btn.is-correct {
+      background: var(--correct-bg);
+      border-color: var(--correct-border);
+      opacity: 1;
+      color: #ffffff;
+    }
+
+    .option-btn.is-correct small {
+      color: #b7f2c4;
+    }
+
+    .option-btn.is-wrong {
+      background: var(--wrong-bg);
+      border-color: var(--wrong-border);
+      opacity: 1;
+      color: #ffffff;
+    }
+
+    .option-btn.is-wrong small {
+      color: #ffc2be;
+    }
+
+    /* 手機版適配 */
+    @media (max-width: 700px) {
+      .frame-wrapper {
+        height: 270px;
+        border-width: 6px;
+      }
+
+      .options-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .title-group h1 {
+        font-size: 1.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 頂部資訊列 -->
+    <header>
+      <div class="title-group">
+        <h1>藝術流派猜猜看</h1>
+        <p>欣賞經典畫作的筆觸與光影，選出它所屬的藝術流派</p>
+      </div>
+      <div class="stats-bar">
+        <div class="stat-item">答對<span id="score">0</span>/<span id="total">0</span></div>
+        <div class="stat-item">連勝<span id="streak">0</span></div>
+        <button class="btn-reset-top" id="resetBtn" title="歸零分數並重新洗牌">重新開始</button>
+      </div>
+    </header>
+
+    <!-- 中間畫作與揭曉區 -->
+    <main class="gallery-stage">
+      <div class="frame-wrapper">
+        <div class="loader" id="loader">
+          <div class="spinner"></div>
+          <span>畫作載入中...</span>
+        </div>
+        <img id="paintingImg" class="painting-img" alt="待猜測的世界名畫">
+      </div>
+
+      <!-- 答案揭曉面板 -->
+      <section class="result-panel" id="resultPanel">
+        <div class="result-header">
+          <div class="result-badge" id="resultBadge"></div>
+          <button class="btn-play-again" id="nextBtn">再玩一次（下一幅）</button>
+        </div>
+        <div class="artwork-info">
+          <h2 id="artTitle"></h2>
+          <div class="artwork-meta" id="artMeta"></div>
+          <p class="artwork-desc" id="artDesc"></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- 下方八個流派按鈕 -->
+    <section>
+      <p class="prompt-text" id="promptText">請從下方選擇這幅畫所屬的藝術流派：</p>
+      <div class="options-grid" id="optionsGrid"></div>
+    </section>
+  </div>
+
+  <script>
+    // 8 個藝術流派定義
+    const MOVEMENTS = [
+      { id: "renaissance", name: "文藝復興", en: "Renaissance" },
+      { id: "baroque", name: "巴洛克", en: "Baroque" },
+      { id: "rococo", name: "洛可可", en: "Rococo" },
+      { id: "romanticism", name: "浪漫主義", en: "Romanticism" },
+      { id: "impressionism", name: "印象派", en: "Impressionism" },
+      { id: "post_impressionism", name: "後印象派", en: "Post-Impressionism" },
+      { id: "expressionism", name: "表現主義", en: "Expressionism" },
+      { id: "modern_abstract", name: "現代抽象藝術", en: "Abstract / Modern" }
+    ];
+
+    // 畫作資料庫（含 Wikimedia Commons 路徑與 Wikipedia 條目備援）
+    const ARTWORKS = [
+      {
+        title: "蒙娜麗莎 (Mona Lisa)",
+        artist: "李奧納多·達文西 (Leonardo da Vinci)",
+        year: "約 1503–1519",
+        movement: "renaissance",
+        file: "Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg",
+        wiki: "Mona_Lisa",
+        desc: "文藝復興時期的巔峰代表作，運用了「暈塗法」（Sfumato）使人物神情柔和神祕，展現人文主義對人的高度關注與寫實技法。"
+      },
+      {
+        title: "維納斯的誕生 (The Birth of Venus)",
+        artist: "桑德羅·波提切利 (Sandro Botticelli)",
+        year: "約 1485",
+        movement: "renaissance",
+        file: "Sandro_Botticelli_-_La_nascita_di_Venere_-_Google_Art_Project_-_edited.jpg",
+        wiki: "The_Birth_of_Venus",
+        desc: "早期文藝復興的代表作之一，題材取自希臘神話，體現了文藝復興復興古典文化與理想比例美學的核心精神。"
+      },
+      {
+        title: "戴珍珠耳環的少女 (Girl with a Pearl Earring)",
+        artist: "約翰內斯·維梅爾 (Johannes Vermeer)",
+        year: "約 1665",
+        movement: "baroque",
+        file: "1665_Girl_with_a_Pearl_Earring.jpg",
+        wiki: "Girl_with_a_Pearl_Earring",
+        desc: "荷蘭黃金時代巴洛克繪畫的傑作，擅長利用戲劇性的明暗對比與細膩的光影折射，捕捉人物回眸瞬間的生動神態。"
+      },
+      {
+        title: "倒牛奶的女僕 (The Milkmaid)",
+        artist: "約翰內斯·維梅爾 (Johannes Vermeer)",
+        year: "約 1658",
+        movement: "baroque",
+        file: "Johannes_Vermeer_-_Het_melkmeisje_-_Google_Art_Project.jpg",
+        wiki: "The_Milkmaid_(Vermeer)",
+        desc: "充滿巴洛克時期典型的側光效果與質感刻畫，將平凡的日常家務賦予雕塑般的莊重感與寧靜張力。"
+      },
+      {
+        title: "鞦韆 (The Swing)",
+        artist: "尚-奧諾雷·弗拉戈納爾 (Jean-Honoré Fragonard)",
+        year: "1767",
+        movement: "rococo",
+        file: "Fragonard,_The_Swing.jpg",
+        wiki: "The_Swing_(Fragonard)",
+        desc: "18世紀法國洛可可風格的經典代表，以粉嫩柔和的色調、繁複華麗的衣飾與輕快浪漫的貴族享樂氛圍著稱。"
+      },
+      {
+        title: "霧海上的旅人 (Wanderer above the Sea of Fog)",
+        artist: "卡斯帕·大衛·弗里德里希 (Caspar David Friedrich)",
+        year: "1818",
+        movement: "romanticism",
+        file: "Caspar_David_Friedrich_-_Wanderer_above_the_sea_of_fog.jpg",
+        wiki: "Wanderer_above_the_Sea_of_Fog",
+        desc: "德國浪漫主義的象徵之作，描繪旅人獨自面對壯闊雲海，展現浪漫派對崇高自然（Sublime）與內心孤獨感的情感表達。"
+      },
+      {
+        title: "自由引導人民 (Liberty Leading the People)",
+        artist: "歐仁·德拉克羅瓦 (Eugène Delacroix)",
+        year: "1830",
+        movement: "romanticism",
+        file: "Eugène_Delacroix_-_La_liberté_guidant_le_peuple.jpg",
+        wiki: "Liberty_Leading_the_People",
+        desc: "法國浪漫主義的代表作，構圖充滿動感與戲劇張力，以強烈色彩與奔放筆觸歌頌激情、自由與革命精神。"
+      },
+      {
+        title: "印象·日出 (Impression, Sunrise)",
+        artist: "克洛德·莫內 (Claude Monet)",
+        year: "1872",
+        movement: "impressionism",
+        file: "Claude_Monet,_Impression,_soleil_levant.jpg",
+        wiki: "Impression,_Sunrise",
+        desc: "「印象派」名稱的由來之作！莫內拋棄傳統精細輪廓，改以快速碎裂的筆觸捕捉晨霧與水面上瞬間變幻的光影與色彩。"
+      },
+      {
+        title: "煎餅磨坊的舞會 (Bal du moulin de la Galette)",
+        artist: "皮耶-奧古斯特·雷諾瓦 (Pierre-Auguste Renoir)",
+        year: "1876",
+        movement: "impressionism",
+        file: "Pierre-Auguste_Renoir,_Le_Moulin_de_la_Galette.jpg",
+        wiki: "Bal_du_moulin_de_la_Galette",
+        desc: "印象派極具代表性的戶外光影作品，樹蔭間灑落的斑駁陽光與歡愉人群的色彩交織，展現對當下生活瞬間的捕捉。"
+      },
+      {
+        title: "星夜 (The Starry Night)",
+        artist: "文森·梵谷 (Vincent van Gogh)",
+        year: "1889",
+        movement: "post_impressionism",
+        file: "Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+        wiki: "The_Starry_Night",
+        desc: "後印象派的經典之作。不同於印象派單純紀錄光影，梵谷以旋轉狂放的厚塗筆觸與強烈對比色，傾注主觀濃烈的情感。"
+      },
+      {
+        title: "向日葵 (Sunflowers)",
+        artist: "文森·梵谷 (Vincent van Gogh)",
+        year: "1888",
+        movement: "post_impressionism",
+        file: "Vincent_van_Gogh_-_Sunflowers_-_VGM_F458.jpg",
+        wiki: "Sunflowers_(Van_Gogh_series)",
+        desc: "後印象派代表作，大膽使用高飽和度的黃色系與粗獷筆觸，賦予靜物強烈的生命力與藝術家的個人精神象徵。"
+      },
+      {
+        title: "吶喊 (The Scream)",
+        artist: "愛德華·孟克 (Edvard Munch)",
+        year: "1893",
+        movement: "expressionism",
+        file: "Edvard_Munch,_1893,_The_Scream,_oil,_tempera_and_pastel_on_cardboard,_91_x_73_cm,_National_Gallery_of_Norway.jpg",
+        wiki: "The_Scream",
+        desc: "表現主義的先驅與代表作，藉由扭曲的線條、血紅的天空與變形的人物面孔，赤裸呈現現代人內心的焦慮、恐懼與孤寂。"
+      },
+      {
+        title: "構成第七號 (Composition VII)",
+        artist: "瓦西里·康丁斯基 (Vassily Kandinsky)",
+        year: "1913",
+        movement: "modern_abstract",
+        file: "Vassily_Kandinsky,_1913_-_Composition_7.jpg",
+        wiki: "Composition_VII",
+        desc: "現代抽象藝術的里程碑，完全擺脫具象物體的束縛，單純以幾何形狀、線條與色彩的交響節奏來傳達精神情感。"
+      },
+      {
+        title: "紅、藍、黃的構圖 (Composition II in Red, Blue, and Yellow)",
+        artist: "皮特·蒙德里安 (Piet Mondrian)",
+        year: "1930",
+        movement: "modern_abstract",
+        file: "Piet_Mondriaan,_1930_-_Mondrian_Composition_II_in_Red,_Blue,_and_Yellow.jpg",
+        wiki: "Composition_with_Red,_Blue_and_Yellow",
+        desc: "現代風格派（幾何抽象藝術）的代表作，僅用水平垂直黑線與三原色色塊，追求宇宙純粹、和諧與理性秩序。"
+      }
+    ];
+
+    // 遊戲狀態
+    let deck = [];
+    let currentIndex = 0;
+    let currentArtwork = null;
+    let score = 0;
+    let totalAnswered = 0;
+    let streak = 0;
+    let hasAnswered = false;
+
+    // DOM 元素
+    const paintingImg = document.getElementById("paintingImg");
+    const loader = document.getElementById("loader");
+    const optionsGrid = document.getElementById("optionsGrid");
+    const resultPanel = document.getElementById("resultPanel");
+    const resultBadge = document.getElementById("resultBadge");
+    const artTitle = document.getElementById("artTitle");
+    const artMeta = document.getElementById("artMeta");
+    const artDesc = document.getElementById("artDesc");
+    const promptText = document.getElementById("promptText");
+    const nextBtn = document.getElementById("nextBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const scoreEl = document.getElementById("score");
+    const totalEl = document.getElementById("total");
+    const streakEl = document.getElementById("streak");
+
+    // 洗牌函式 (Fisher-Yates)
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    // 建立 8 個流派按鈕
+    function initButtons() {
+      optionsGrid.innerHTML = "";
+      MOVEMENTS.forEach((m) => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.dataset.movement = m.id;
+        btn.innerHTML = `${m.name}<small>${m.en}</small>`;
+        btn.addEventListener("click", () => handleGuess(m.id, btn));
+        optionsGrid.appendChild(btn);
+      });
+    }
+
+    // 載入畫作（含 Wikipedia API 自動備援機制）
+    async function loadArtworkImage(artwork) {
+      paintingImg.classList.remove("loaded");
+      paintingImg.removeAttribute("src");
+      loader.style.display = "flex";
+      loader.querySelector("span").textContent = "畫作載入中...";
+
+      const primaryUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(artwork.file)}?width=900`;
+
+      paintingImg.onload = () => {
+        loader.style.display = "none";
+        paintingImg.classList.add("loaded");
+      };
+
+      let triedFallback = false;
+      paintingImg.onerror = async () => {
+        if (!triedFallback && artwork.wiki) {
+          triedFallback = true;
+          try {
+            const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${artwork.wiki}`);
+            const data = await res.json();
+            if (data.thumbnail && data.thumbnail.source) {
+              paintingImg.src = data.thumbnail.source.replace(/\/\d+px-/, "/800px-");
+              return;
+            }
+          } catch (e) {
+            console.warn("備援圖片載入失敗:", e);
+          }
+        }
+        loader.innerHTML = `<span>圖片暫時無法載入，請檢查網路或點擊下一幅</span>`;
+      };
+
+      paintingImg.src = primaryUrl;
+    }
+
+    // 載入新一題
+    function loadRound() {
+      hasAnswered = false;
+      resultPanel.className = "result-panel";
+      promptText.textContent = "請從下方選擇這幅畫所屬的藝術流派：";
+
+      // 若牌庫用完，重新洗牌
+      if (currentIndex >= deck.length) {
+        deck = shuffle(ARTWORKS);
+        currentIndex = 0;
+      }
+
+      currentArtwork = deck[currentIndex];
+      currentIndex++;
+
+      // 重置按鈕狀態
+      document.querySelectorAll(".option-btn").forEach((btn) => {
+        btn.disabled = false;
+        btn.classList.remove("is-correct", "is-wrong");
+      });
+
+      loadArtworkImage(currentArtwork);
+    }
+
+    // 處理玩家猜測
+    function handleGuess(selectedId, clickedBtn) {
+      if (hasAnswered) return;
+      hasAnswered = true;
+      totalAnswered++;
+
+      const isCorrect = selectedId === currentArtwork.movement;
+      const correctMovement = MOVEMENTS.find((m) => m.id === currentArtwork.movement);
+
+      if (isCorrect) {
+        score++;
+        streak++;
+        resultPanel.className = "result-panel show correct";
+        resultBadge.textContent = `✓ 猜對了！這確實是「${correctMovement.name}」`;
+      } else {
+        streak = 0;
+        resultPanel.className = "result-panel show wrong";
+        resultBadge.textContent = `✗ 猜錯了！正確流派是「${correctMovement.name}」`;
+        clickedBtn.classList.add("is-wrong");
+      }
+
+      // 標記正確答案與鎖定所有按鈕
+      document.querySelectorAll(".option-btn").forEach((btn) => {
+        btn.disabled = true;
+        if (btn.dataset.movement === currentArtwork.movement) {
+          btn.classList.add("is-correct");
+        }
+      });
+
+      // 顯示畫作詳細資訊
+      artTitle.textContent = currentArtwork.title;
+      artMeta.textContent = `${currentArtwork.artist}｜${currentArtwork.year}｜${correctMovement.name} (${correctMovement.en})`;
+      artDesc.textContent = currentArtwork.desc;
+      promptText.textContent = "已揭曉答案！點擊「再玩一次」繼續挑戰下一幅畫作";
+
+      updateStats();
+    }
+
+    // 更新計分板
+    function updateStats() {
+      scoreEl.textContent = score;
+      totalEl.textContent = totalAnswered;
+      streakEl.textContent = streak;
+    }
+
+    // 重新開始整個遊戲
+    function resetGame() {
+      score = 0;
+      totalAnswered = 0;
+      streak = 0;
+      deck = shuffle(ARTWORKS);
+      currentIndex = 0;
+      updateStats();
+      loadRound();
+    }
+
+    // 綁定事件
+    nextBtn.addEventListener("click", loadRound);
+    resetBtn.addEventListener("click", resetGame);
+
+    // 初始化
+    initButtons();
+    resetGame();
+  </script>
+</body>
+</html>
