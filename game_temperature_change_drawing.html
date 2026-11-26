@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>溫感油墨變色紙杯模擬器</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --warm: #f97316;
+      --warm-dark: #ea580c;
+      --cool: #06b6d4;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background: linear-gradient(135deg, #eef6ff 0%, #fff7ed 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      color: #0f172a;
+    }
+
+    .subtitle {
+      margin: 0 auto;
+      max-width: 780px;
+      font-size: 0.95rem;
+      color: #475569;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      line-height: 1.5;
+    }
+
+    .steps-bar {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .step-pill {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      transition: all 0.25s;
+    }
+
+    .step-pill.active {
+      background: #dbeafe;
+      border-color: var(--primary);
+      color: #1d4ed8;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 880px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.07);
+      border: 1px solid var(--border);
+    }
+
+    /* Stage Area */
+    .stage-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .stage-top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .status-badge.hot {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    .canvas-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .cup-stage {
+      position: relative;
+      width: 340px;
+      max-width: 100%;
+      aspect-ratio: 340 / 410;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, #f8fafc 75%, #e2e8f0 100%);
+      border-radius: 18px;
+      border: 2px dashed #cbd5e1;
+      overflow: hidden;
+    }
+
+    canvas#cupCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    /* Thermometer */
+    .thermo-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 8px;
+      background: #f8fafc;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      min-width: 72px;
+    }
+
+    .thermo-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .thermo-temp {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0284c7;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .thermo-temp.hot {
+      color: #ea580c;
+    }
+
+    .thermo-track {
+      width: 18px;
+      height: 170px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #cbd5e1;
+    }
+
+    .thermo-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20%;
+      background: linear-gradient(to top, #38bdf8, #fb923c, #ef4444);
+      border-radius: 999px;
+      transition: height 0.1s linear;
+    }
+
+    .thermo-mark {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 52%; /* ~33°C */
+      border-top: 2px dashed #f97316;
+    }
+
+    .temp-slider-wrap {
+      width: 100%;
+      margin-top: 10px;
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .temp-slider-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #475569;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--warm);
+      cursor: pointer;
+    }
+
+    /* Action Buttons under stage */
+    .stage-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 500px) {
+      .stage-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.94rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-warm {
+      background: linear-gradient(135deg, #fb923c, #ea580c);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.28);
+    }
+
+    .btn-warm:hover:not(:disabled) {
+      background: linear-gradient(135deg, #f97316, #c2410c);
+    }
+
+    .btn-cool {
+      background: linear-gradient(135deg, #22d3ee, #0284c7);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.22);
+    }
+
+    .btn-cool:hover:not(:disabled) {
+      background: linear-gradient(135deg, #06b6d4, #0369a1);
+    }
+
+    .btn-reset {
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+
+    .btn-reset:hover:not(:disabled) {
+      background: #e2e8f0;
+    }
+
+    /* Right Toolbox */
+    .tool-section {
+      margin-bottom: 16px;
+    }
+
+    .tool-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .section-title {
+      font-size: 0.96rem;
+      font-weight: 800;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #1e293b;
+    }
+
+    .section-hint {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* Ink Swatches */
+    .ink-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .ink-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .ink-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .ink-btn:hover {
+      border-color: #94a3b8;
+    }
+
+    .ink-btn.selected {
+      border-color: var(--primary);
+      background: #eff6ff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.16);
+    }
+
+    .ink-pair {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0, 0, 0, 0.18);
+    }
+
+    .swatch.invisible-swatch {
+      background: repeating-conic-gradient(#e2e8f0 0% 25%, #ffffff 0% 50%) 50% / 10px 10px;
+    }
+
+    .ink-arrow {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 700;
+    }
+
+    .ink-info {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .ink-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .ink-desc {
+      font-size: 0.73rem;
+      color: #64748b;
+    }
+
+    /* Tools & Stamps */
+    .mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .tool-chip {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: #f8fafc;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #334155;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .tool-chip.selected {
+      background: #dbeafe;
+      border-color: var(--primary);
+      color: #1d4ed8;
+    }
+
+    .stamp-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .stamp-btn {
+      padding: 8px 4px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .stamp-btn:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+    }
+
+    .stamp-btn.selected {
+      border-color: var(--primary);
+      background: #eff6ff;
+      box-shadow: 0 2px 6px rgba(59, 130, 246, 0.16);
+    }
+
+    .stamp-emoji {
+      font-size: 1.35rem;
+      line-height: 1.2;
+    }
+
+    .stamp-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .size-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .size-label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .edit-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-small {
+      padding: 8px 12px;
+      font-size: 0.84rem;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #334155;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-small:hover {
+      background: #f1f5f9;
+    }
+
+    .btn-demo {
+      background: #fef3c7;
+      border-color: #fcd34d;
+      color: #92400e;
+    }
+
+    .btn-demo:hover {
+      background: #fde68a;
+    }
+
+    .science-tip {
+      margin-top: 14px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.83rem;
+      color: #166534;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎨 溫感油墨變色紙杯模擬器</h1>
+      <p class="subtitle">
+        <strong>什麼是溫感油墨？</strong>
+        溫感油墨會感應溫度變化！在常溫（約 22°C）下是一種顏色，當我們把 <strong>35°C～40°C 的溫水</strong> 倒進紙杯裡，油墨受熱就會變成另一種顏色，甚至變成透明！在動手畫真的紙杯之前，先用模擬器試玩看看吧！
+      </p>
+      <div class="steps-bar">
+        <span class="step-pill active" id="step1">① 選擇溫感油墨並畫在紙杯上</span>
+        <span class="step-pill" id="step2">② 倒入溫水觀察變色</span>
+        <span class="step-pill" id="step3">③ 冷卻復原或再玩一次</span>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- Left: Cup Simulation Stage -->
+      <section class="panel stage-wrapper">
+        <div class="stage-top-bar">
+          <div class="status-badge" id="cupStatus">💧 紙杯狀態：常溫空杯</div>
+          <div class="status-badge" id="inkHintBadge">目前畫筆：海洋藍 ➔ 櫻花粉</div>
+        </div>
+
+        <div class="canvas-row">
+          <div class="cup-stage">
+            <canvas id="cupCanvas" width="680" height="820"></canvas>
+          </div>
+
+          <div class="thermo-box">
+            <div class="thermo-label">紙杯溫度</div>
+            <div class="thermo-temp" id="tempDisplay">22°C</div>
+            <div class="thermo-track" title="虛線為變色溫度（約 33°C）">
+              <div class="thermo-fill" id="thermoFill"></div>
+              <div class="thermo-mark"></div>
+            </div>
+            <div class="thermo-label" style="font-size:0.7rem; color:#ea580c;">33°C 變色</div>
+          </div>
+        </div>
+
+        <div class="temp-slider-wrap">
+          <div class="temp-slider-header">
+            <span>🌡️ 手動測試溫度變化（20°C 冰涼 ～ 45°C 溫熱）</span>
+            <span id="sliderTempLabel">22°C</span>
+          </div>
+          <input type="range" id="tempSlider" min="20" max="45" step="0.5" value="22" />
+        </div>
+
+        <div class="stage-actions">
+          <button class="btn btn-warm" id="pourWarmBtn">🫖 倒入溫水 (40°C)</button>
+          <button class="btn btn-cool" id="coolDownBtn">❄️ 倒入冰水降溫</button>
+          <button class="btn btn-reset" id="playAgainBtn">🔄 再玩一次 (重畫)</button>
+        </div>
+      </section>
+
+      <!-- Right: Tools & Inks -->
+      <section class="panel">
+        <div class="tool-section">
+          <h2 class="section-title">
+            1. 選擇溫感油墨顏色
+            <span class="section-hint">常溫色 ➔ 受熱變色</span>
+          </h2>
+          <div class="ink-grid" id="inkGrid"></div>
+        </div>
+
+        <div class="tool-section">
+          <h2 class="section-title">
+            2. 選擇畫法與圖案
+            <span class="section-hint">點按或拖曳紙杯作畫</span>
+          </h2>
+          <div class="mode-row">
+            <button class="tool-chip selected" id="brushModeBtn">🖌️ 自由畫筆</button>
+            <button class="tool-chip" id="stampModeBtn">✨ 圖案印章</button>
+          </div>
+
+          <div class="stamp-grid" id="stampGrid"></div>
+
+          <div class="size-row">
+            <span class="size-label">大小粗細：</span>
+            <button class="tool-chip" data-size="small">小 / 細</button>
+            <button class="tool-chip selected" data-size="medium">中</button>
+            <button class="tool-chip" data-size="large">大 / 粗</button>
+          </div>
+
+          <div class="edit-actions">
+            <button class="btn-small" id="undoBtn">↩️ 上一步</button>
+            <button class="btn-small" id="clearDrawBtn">🗑️ 清空圖案</button>
+            <button class="btn-small" id="emptyWaterBtn">💧 倒掉水 (保留畫作)</button>
+            <button class="btn-small btn-demo" id="demoBtn">🌟 載入示範圖案</button>
+          </div>
+        </div>
+
+        <div class="science-tip">
+          💡 <strong>小秘密：</strong> 你可以試著用「魔幻紫 ➔ 透明」在紙杯上畫一層雲朵或遮罩，下面疊加「黑色 ➔ 黃色」的太陽或愛心，倒入溫水後就會出現<strong>「隱藏圖案現身」</strong>的魔法效果喔！
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // ====== 1. 溫感油墨定義 ======
+    const INKS = [
+      {
+        id: 'blue-pink',
+        name: '海洋藍 ➔ 櫻花粉',
+        desc: '冷色變暖粉紅',
+        cold: '#1d63dc',
+        warm: '#ff5c93',
+        warmInvisible: false
+      },
+      {
+        id: 'black-yellow',
+        name: '神秘黑 ➔ 陽光黃',
+        desc: '深色變亮黃色',
+        cold: '#22222a',
+        warm: '#ffd000',
+        warmInvisible: false
+      },
+      {
+        id: 'purple-clear',
+        name: '魔幻紫 ➔ 隱形透明',
+        desc: '受熱會消失現出底圖',
+        cold: '#7b2cbf',
+        warm: 'rgba(123, 44, 191, 0.04)',
+        warmInvisible: true
+      },
+      {
+        id: 'green-orange',
+        name: '森林綠 ➔ 活力橘',
+        desc: '綠色變亮橘色',
+        cold: '#15803d',
+        warm: '#ff7b00',
+        warmInvisible: false
+      },
+      {
+        id: 'red-yellow',
+        name: '草莓紅 ➔ 檸檬黃',
+        desc: '紅色變金黃色',
+        cold: '#dc2626',
+        warm: '#fde047',
+        warmInvisible: false
+      },
+      {
+        id: 'brown-sky',
+        name: '咖啡棕 ➔ 天空藍',
+        desc: '大地色變亮藍色',
+        cold: '#78350f',
+        warm: '#38bdf8',
+        warmInvisible: false
+      }
+    ];
+
+    const STAMPS = [
+      { id: 'heart', emoji: '❤️', label: '愛心' },
+      { id: 'star', emoji: '⭐', label: '星星' },
+      { id: 'flower', emoji: '🌸', label: '花朵' },
+      { id: 'smile', emoji: '😊', label: '笑臉' },
+      { id: 'butterfly', emoji: '🦋', label: '蝴蝶' },
+      { id: 'sun', emoji: '☀️', label: '太陽' },
+      { id: 'paw', emoji: '🐾', label: '腳印' },
+      { id: 'note', emoji: '🎵', label: '音符' }
+    ];
+
+    // ====== 2. 畫布與幾何設定 (邏輯座標 340x410，內部 2 倍解析度 680x820) ======
+    const SCALE = 2;
+    const W = 340;
+    const H = 410;
+
+    // 紙杯梯形座標
+    const CUP = {
+      topY: 78,
+      bottomY: 368,
+      topLeftX: 55,
+      topRightX: 285,
+      bottomLeftX: 90,
+      bottomRightX: 250,
+      rimHeight: 16
+    };
+
+    const canvas = document.getElementById('cupCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 離屏畫布：分別繪製冷色層與熱色層
+    const coldCanvas = document.createElement('canvas');
+    coldCanvas.width = W * SCALE;
+    coldCanvas.height = H * SCALE;
+    const coldCtx = coldCanvas.getContext('2d');
+
+    const warmCanvas = document.createElement('canvas');
+    warmCanvas.width = W * SCALE;
+    warmCanvas.height = H * SCALE;
+    const warmCtx = warmCanvas.getContext('2d');
+
+    // 合成用暫存畫布
+    const compCold = document.createElement('canvas');
+    compCold.width = W * SCALE;
+    compCold.height = H * SCALE;
+    const compColdCtx = compCold.getContext('2d');
+
+    const compWarm = document.createElement('canvas');
+    compWarm.width = W * SCALE;
+    compWarm.height = H * SCALE;
+    const compWarmCtx = compWarm.getContext('2d');
+
+    // ====== 3. 遊戲狀態 ======
+    const state = {
+      selectedInk: INKS[0],
+      mode: 'brush', // 'brush' | 'stamp'
+      selectedStamp: 'heart',
+      sizeLevel: 'medium', // 'small' | 'medium' | 'large'
+      items: [], // 儲存所有筆畫與印章
+      isDrawing: false,
+      currentStroke: null,
+
+      // 溫度與水流模擬
+      temp: 22,
+      targetTemp: 22,
+      waterLevel: 0, // 0 ~ 1
+      targetWaterLevel: 0,
+      waterType: 'none', // 'none' | 'warm' | 'cool'
+      isPouring: false,
+      pourProgress: 0,
+      steamParticles: []
+    };
+
+    // ====== 4. UI 初始化 ======
+    const inkGrid = document.getElementById('inkGrid');
+    const stampGrid = document.getElementById('stampGrid');
+    const tempDisplay = document.getElementById('tempDisplay');
+    const thermoFill = document.getElementById('thermoFill');
+    const tempSlider = document.getElementById('tempSlider');
+    const sliderTempLabel = document.getElementById('sliderTempLabel');
+    const cupStatus = document.getElementById('cupStatus');
+    const inkHintBadge = document.getElementById('inkHintBadge');
+
+    function renderInkButtons() {
+      inkGrid.innerHTML = '';
+      INKS.forEach((ink) => {
+        const btn = document.createElement('button');
+        btn.className = 'ink-btn' + (state.selectedInk.id === ink.id ? ' selected' : '');
+        btn.innerHTML = `
+          <div class="ink-pair">
+            <span class="swatch" style="background:${ink.cold}"></span>
+            <span class="ink-arrow">➔</span>
+            <span class="swatch ${ink.warmInvisible ? 'invisible-swatch' : ''}" style="${ink.warmInvisible ? '' : 'background:' + ink.warm}"></span>
+          </div>
+          <div class="ink-info">
+            <span class="ink-name">${ink.name}</span>
+            <span class="ink-desc">${ink.desc}</span>
+          </div>
+        `;
+        btn.addEventListener('click', () => {
+          state.selectedInk = ink;
+          inkHintBadge.textContent = `目前畫筆：${ink.name}`;
+          renderInkButtons();
+        });
+        inkGrid.appendChild(btn);
+      });
+    }
+
+    function renderStampButtons() {
+      stampGrid.innerHTML = '';
+      STAMPS.forEach((st) => {
+        const btn = document.createElement('button');
+        btn.className = 'stamp-btn' + (state.mode === 'stamp' && state.selectedStamp === st.id ? ' selected' : '');
+        btn.innerHTML = `
+          <span class="stamp-emoji">${st.emoji}</span>
+          <span class="stamp-label">${st.label}</span>
+        `;
+        btn.addEventListener('click', () => {
+          state.mode = 'stamp';
+          state.selectedStamp = st.id;
+          updateModeButtons();
+        });
+        stampGrid.appendChild(btn);
+      });
+    }
+
+    function updateModeButtons() {
+      document.getElementById('brushModeBtn').classList.toggle('selected', state.mode === 'brush');
+      document.getElementById('stampModeBtn').classList.toggle('selected', state.mode === 'stamp');
+      renderStampButtons();
+    }
+
+    document.getElementById('brushModeBtn').addEventListener('click', () => {
+      state.mode = 'brush';
+      updateModeButtons();
+    });
+
+    document.getElementById('stampModeBtn').addEventListener('click', () => {
+      state.mode = 'stamp';
+      updateModeButtons();
+    });
+
+    document.querySelectorAll('[data-size]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.sizeLevel = btn.dataset.size;
+        document.querySelectorAll('[data-size]').forEach((b) => b.classList.toggle('selected', b === btn));
+      });
+    });
+
+    // ====== 5. 繪圖與印章矢量渲染 ======
+    function getBrushRadius() {
+      if (state.sizeLevel === 'small') return 5;
+      if (state.sizeLevel === 'large') return 15;
+      return 9;
+    }
+
+    function getStampRadius() {
+      if (state.sizeLevel === 'small') return 18;
+      if (state.sizeLevel === 'large') return 36;
+      return 26;
+    }
+
+    function cupBodyPath(c) {
+      c.beginPath();
+      c.moveTo(CUP.topLeftX, CUP.topY);
+      c.lineTo(CUP.topRightX, CUP.topY);
+      c.lineTo(CUP.bottomRightX, CUP.bottomY);
+      c.quadraticCurveTo(W / 2, CUP.bottomY + 14, CUP.bottomLeftX, CUP.bottomY);
+      c.closePath();
+    }
+
+    function drawStampShape(c, type, x, y, r, color) {
+      c.save();
+      c.translate(x, y);
+      c.fillStyle = color;
+      c.strokeStyle = color;
+      c.lineCap = 'round';
+      c.lineJoin = 'round';
+
+      if (type === 'heart') {
+        const s = r * 0.85;
+        c.beginPath();
+        c.moveTo(0, s * 0.35);
+        c.bezierCurveTo(-s * 1.1, -s * 0.45, -s * 0.55, -s * 1.15, 0, -s * 0.45);
+        c.bezierCurveTo(s * 0.55, -s * 1.15, s * 1.1, -s * 0.45, 0, s * 0.35);
+        c.closePath();
+        c.translate(0, s * 0.25);
+        c.fill();
+      } else if (type === 'star') {
+        c.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const rad = i % 2 === 0 ? r : r * 0.45;
+          const ang = (Math.PI / 5) * i - Math.PI / 2;
+          const px = Math.cos(ang) * rad;
+          const py = Math.sin(ang) * rad;
+          if (i === 0) c.moveTo(px, py);
+          else c.lineTo(px, py);
+        }
+        c.closePath();
+        c.fill();
+      } else if (type === 'flower') {
+        const petalR = r * 0.42;
+        for (let i = 0; i < 6; i++) {
+          const ang = (Math.PI / 3) * i;
+          c.beginPath();
+          c.arc(Math.cos(ang) * r * 0.52, Math.sin(ang) * r * 0.52, petalR, 0, Math.PI * 2);
+          c.fill();
+        }
+        c.beginPath();
+        c.arc(0, 0, r * 0.3, 0, Math.PI * 2);
+        c.fillStyle = 'rgba(255,255,255,0.65)';
+        c.fill();
+      } else if (type === 'smile') {
+        c.lineWidth = Math.max(2.5, r * 0.14);
+        c.beginPath();
+        c.arc(0, 0, r * 0.85, 0, Math.PI * 2);
+        c.stroke();
+        // eyes
+        c.beginPath();
+        c.arc(-r * 0.3, -r * 0.2, r * 0.11, 0, Math.PI * 2);
+        c.arc(r * 0.3, -r * 0.2, r * 0.11, 0, Math.PI * 2);
+        c.fill();
+        // mouth
+        c.beginPath();
+        c.arc(0, r * 0.05, r * 0.45, 0.2, Math.PI - 0.2);
+        c.stroke();
+      } else if (type === 'butterfly') {
+        c.beginPath();
+        c.ellipse(-r * 0.42, -r * 0.2, r * 0.48, r * 0.36, -0.4, 0, Math.PI * 2);
+        c.ellipse(r * 0.42, -r * 0.2, r * 0.48, r * 0.36, 0.4, 0, Math.PI * 2);
+        c.ellipse(-r * 0.34, r * 0.32, r * 0.36, r * 0.28, 0.4, 0, Math.PI * 2);
+        c.ellipse(r * 0.34, r * 0.32, r * 0.36, r * 0.28, -0.4, 0, Math.PI * 2);
+        c.fill();
+        c.lineWidth = Math.max(2.5, r * 0.16);
+        c.beginPath();
+        c.moveTo(0, -r * 0.55);
+        c.lineTo(0, r * 0.65);
+        c.stroke();
+      } else if (type === 'sun') {
+        c.beginPath();
+        c.arc(0, 0, r * 0.48, 0, Math.PI * 2);
+        c.fill();
+        c.lineWidth = Math.max(2.5, r * 0.14);
+        for (let i = 0; i < 8; i++) {
+          const ang = (Math.PI / 4) * i;
+          c.beginPath();
+          c.moveTo(Math.cos(ang) * r * 0.65, Math.sin(ang) * r * 0.65);
+          c.lineTo(Math.cos(ang) * r * 0.95, Math.sin(ang) * r * 0.95);
+          c.stroke();
+        }
+      } else if (type === 'paw') {
+        c.beginPath();
+        c.ellipse(0, r * 0.25, r * 0.45, r * 0.35, 0, 0, Math.PI * 2);
+        c.fill();
+        const toes = [
+          [-0.48, -0.15],
+          [-0.18, -0.42],
+          [0.18, -0.42],
+          [0.48, -0.15]
+        ];
+        toes.forEach(([tx, ty]) => {
+          c.beginPath();
+          c.arc(tx * r, ty * r, r * 0.16, 0, Math.PI * 2);
+          c.fill();
+        });
+      } else if (type === 'note') {
+        c.lineWidth = Math.max(3, r * 0.16);
+        c.beginPath();
+        c.ellipse(-r * 0.35, r * 0.4, r * 0.24, r * 0.18, -0.35, 0, Math.PI * 2);
+        c.ellipse(r * 0.35, r * 0.28, r * 0.24, r * 0.18, -0.35, 0, Math.PI * 2);
+        c.fill();
+        c.beginPath();
+        c.moveTo(-r * 0.15, r * 0.35);
+        c.lineTo(-r * 0.15, -r * 0.52);
+        c.lineTo(r * 0.55, -r * 0.66);
+        c.lineTo(r * 0.55, r * 0.22);
+        c.stroke();
+      }
+      c.restore();
+    }
+
+    function renderOffscreenLayers() {
+      [
+        [coldCtx, 'cold'],
+        [warmCtx, 'warm']
+      ].forEach(([c, mode]) => {
+        c.save();
+        c.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+        c.clearRect(0, 0, W, H);
+        cupBodyPath(c);
+        c.clip();
+
+        state.items.forEach((item) => {
+          const ink = INKS.find((i) => i.id === item.inkId) || INKS[0];
+          const color = mode === 'cold' ? ink.cold : ink.warm;
+
+          if (item.type === 'stroke') {
+            if (item.points.length === 0) return;
+            c.strokeStyle = color;
+            c.fillStyle = color;
+            c.lineWidth = item.width;
+            c.lineCap = 'round';
+            c.lineJoin = 'round';
+
+            if (item.points.length === 1) {
+              c.beginPath();
+              c.arc(item.points[0].x, item.points[0].y, item.width / 2, 0, Math.PI * 2);
+              c.fill();
+            } else {
+              c.beginPath();
+              c.moveTo(item.points[0].x, item.points[0].y);
+              for (let i = 1; i < item.points.length; i++) {
+                c.lineTo(item.points[i].x, item.points[i].y);
+              }
+              c.stroke();
+            }
+          } else if (item.type === 'stamp') {
+            drawStampShape(c, item.stampId, item.x, item.y, item.radius, color);
+          }
+        });
+        c.restore();
+      });
+    }
+
+    // ====== 6. 座標轉換與觸控/滑鼠繪畫 ======
+    function getCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: ((e.clientX - rect.left) / rect.width) * W,
+        y: ((e.clientY - rect.top) / rect.height) * H
+      };
+    }
+
+    function isInsideCup(x, y) {
+      if (y < CUP.topY - 4 || y > CUP.bottomY + 8) return false;
+      const t = (y - CUP.topY) / (CUP.bottomY - CUP.topY);
+      const clampedT = Math.max(0, Math.min(1, t));
+      const leftX = CUP.topLeftX + (CUP.bottomLeftX - CUP.topLeftX) * clampedT;
+      const rightX = CUP.topRightX + (CUP.bottomRightX - CUP.topRightX) * clampedT;
+      return x >= leftX - 6 && x <= rightX + 6;
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const pt = getCanvasPoint(e);
+      if (!isInsideCup(pt.x, pt.y)) return;
+
+      canvas.setPointerCapture(e.pointerId);
+
+      if (state.mode === 'stamp') {
+        state.items.push({
+          type: 'stamp',
+          stampId: state.selectedStamp,
+          x: pt.x,
+          y: pt.y,
+          radius: getStampRadius(),
+          inkId: state.selectedInk.id
+        });
+        renderOffscreenLayers();
+      } else {
+        state.isDrawing = true;
+        state.currentStroke = {
+          type: 'stroke',
+          inkId: state.selectedInk.id,
+          width: getBrushRadius(),
+          points: [pt]
+        };
+        state.items.push(state.currentStroke);
+        renderOffscreenLayers();
+      }
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!state.isDrawing || !state.currentStroke) return;
+      const pt = getCanvasPoint(e);
+      const pts = state.currentStroke.points;
+      const last = pts[pts.length - 1];
+      const dist = Math.hypot(pt.x - last.x, pt.y - last.y);
+      if (dist >= 2.2) {
+        pts.push(pt);
+        renderOffscreenLayers();
+      }
+    });
+
+    function stopDrawing() {
+      state.isDrawing = false;
+      state.currentStroke = null;
+    }
+
+    canvas.addEventListener('pointerup', stopDrawing);
+    canvas.addEventListener('pointercancel', stopDrawing);
+
+    // ====== 7. 編輯與示範圖案 ======
+    document.getElementById('undoBtn').addEventListener('click', () => {
+      if (state.items.length > 0) {
+        state.items.pop();
+        renderOffscreenLayers();
+      }
+    });
+
+    document.getElementById('clearDrawBtn').addEventListener('click', () => {
+      state.items = [];
+      renderOffscreenLayers();
+    });
+
+    document.getElementById('emptyWaterBtn').addEventListener('click', () => {
+      state.targetWaterLevel = 0;
+      state.waterLevel = 0;
+      state.waterType = 'none';
+      state.isPouring = false;
+      state.targetTemp = 22;
+      updateSteps(1);
+    });
+
+    document.getElementById('demoBtn').addEventListener('click', () => {
+      state.items = [
+        // 底部愛心與星星
+        { type: 'stamp', stampId: 'sun', x: 170, y: 185, radius: 34, inkId: 'black-yellow' },
+        // 用紫色隱形油墨疊一層神秘遮罩在太陽旁邊
+        { type: 'stamp', stampId: 'heart', x: 120, y: 270, radius: 26, inkId: 'blue-pink' },
+        { type: 'stamp', stampId: 'flower', x: 220, y: 270, radius: 26, inkId: 'green-orange' },
+        { type: 'stamp', stampId: 'star', x: 118, y: 155, radius: 20, inkId: 'purple-clear' },
+        { type: 'stamp', stampId: 'star', x: 222, y: 155, radius: 20, inkId: 'purple-clear' },
+        { type: 'stamp', stampId: 'smile', x: 170, y: 318, radius: 22, inkId: 'brown-sky' },
+        // 微笑波浪裝飾
+        {
+          type: 'stroke',
+          inkId: 'red-yellow',
+          width: 7,
+          points: [
+            { x: 96, y: 225 },
+            { x: 125, y: 215 },
+            { x: 155, y: 228 },
+            { x: 185, y: 215 },
+            { x: 215, y: 228 },
+            { x: 244, y: 218 }
+          ]
+        }
+      ];
+      renderOffscreenLayers();
+    });
+
+    // ====== 8. 倒水與溫度動畫控制 ======
+    function updateSteps(stepNum) {
+      document.getElementById('step1').classList.toggle('active', stepNum === 1);
+      document.getElementById('step2').classList.toggle('active', stepNum === 2);
+      document.getElementById('step3').classList.toggle('active', stepNum === 3);
+    }
+
+    document.getElementById('pourWarmBtn').addEventListener('click', () => {
+      if (state.items.length === 0) {
+        // 如果沒畫任何東西，提示或幫忙放一個愛心讓他們不會困惑，也可以直接倒水
+      }
+      state.waterType = 'warm';
+      state.isPouring = true;
+      state.pourProgress = 0;
+      state.targetWaterLevel = 0.86;
+      state.targetTemp = 40;
+      updateSteps(2);
+    });
+
+    document.getElementById('coolDownBtn').addEventListener('click', () => {
+      state.waterType = 'cool';
+      state.isPouring = true;
+      state.pourProgress = 0;
+      state.targetWaterLevel = 0.86;
+      state.targetTemp = 20;
+      updateSteps(3);
+    });
+
+    document.getElementById('playAgainBtn').addEventListener('click', () => {
+      state.items = [];
+      state.waterLevel = 0;
+      state.targetWaterLevel = 0;
+      state.waterType = 'none';
+      state.isPouring = false;
+      state.temp = 22;
+      state.targetTemp = 22;
+      state.steamParticles = [];
+      renderOffscreenLayers();
+      updateSteps(1);
+    });
+
+    tempSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      state.targetTemp = val;
+      state.temp = val;
+      // 如果杯子是空的，手動拉高溫度時也預設整杯受熱效果（模擬吹風機或滿杯溫水）
+      if (state.waterLevel < 0.05 && val >= 28) {
+        state.waterLevel = 0.92;
+        state.targetWaterLevel = 0.92;
+        state.waterType = 'warm';
+      } else if (val < 25 && state.waterType === 'warm') {
+        state.waterType = 'cool';
+      }
+    });
+
+    // ====== 9. 主渲染迴圈 (紙杯、溫水、蒸汽、溫感漸進變色) ======
+    function getHeatRatio(temp) {
+      // 溫感油墨大約在 30°C 開始漸變，36°C 以上完全變色
+      if (temp <= 29) return 0;
+      if (temp >= 37) return 1;
+      return (temp - 29) / (37 - 29);
+    }
+
+    function updateSimulation() {
+      // 溫度平緩變化
+      state.temp += (state.targetTemp - state.temp) * 0.06;
+      if (Math.abs(state.targetTemp - state.temp) < 0.05) state.temp = state.targetTemp;
+
+      // 水位平緩上升
+      if (state.waterLevel < state.targetWaterLevel) {
+        state.waterLevel = Math.min(state.targetWaterLevel, state.waterLevel + 0.014);
+      } else if (state.waterLevel > state.targetWaterLevel) {
+        state.waterLevel = Math.max(state.targetWaterLevel, state.waterLevel - 0.02);
+      }
+
+      // 倒水動畫結束判斷
+      if (state.isPouring) {
+        state.pourProgress += 0.02;
+        if (state.waterLevel >= state.targetWaterLevel - 0.01 && state.pourProgress > 1.1) {
+          state.isPouring = false;
+        }
+      }
+
+      // 熱氣粒子
+      if (state.temp >= 33 && state.waterLevel > 0.15 && Math.random() < 0.25) {
+        state.steamParticles.push({
+          x: W / 2 + (Math.random() - 0.5) * 110,
+          y: CUP.topY - 4,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: -0.7 - Math.random() * 0.6,
+          r: 6 + Math.random() * 8,
+          alpha: 0.45
+        });
+      }
+      state.steamParticles.forEach((p) => {
+        p.x += p.vx + Math.sin(p.y * 0.08) * 0.25;
+        p.y += p.vy;
+        p.r += 0.12;
+        p.alpha -= 0.005;
+      });
+      state.steamParticles = state.steamParticles.filter((p) => p.alpha > 0);
+
+      // 更新溫度計 UI
+      const roundedTemp = Math.round(state.temp);
+      tempDisplay.textContent = `${roundedTemp}°C`;
+      sliderTempLabel.textContent = `${roundedTemp}°C`;
+      tempSlider.value = state.temp;
+
+      const isHot = state.temp >= 33;
+      tempDisplay.classList.toggle('hot', isHot);
+      cupStatus.classList.toggle('hot', isHot);
+
+      const fillPct = Math.max(5, Math.min(100, ((state.temp - 18) / (46 - 18)) * 100));
+      thermoFill.style.height = `${fillPct}%`;
+
+      if (state.waterLevel < 0.05) {
+        cupStatus.textContent = isHot ? '🔥 紙杯受熱中（模擬加熱）' : '💧 紙杯狀態：常溫空杯';
+      } else if (isHot) {
+        cupStatus.textContent = '♨️ 紙杯裝滿溫水：油墨變色中！';
+      } else {
+        cupStatus.textContent = '❄️ 紙杯裝滿涼水：恢復常溫顏色';
+      }
+    }
+
+    function drawCupScene() {
+      ctx.save();
+      ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+
+      // 1. 桌面陰影
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.ellipse(W / 2, CUP.bottomY + 14, 115, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. 紙杯內部底面（杯口橢圓內側）
+      ctx.fillStyle = '#e2e8f0';
+      ctx.beginPath();
+      ctx.ellipse(W / 2, CUP.topY, (CUP.topRightX - CUP.topLeftX) / 2, CUP.rimHeight, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. 若有水，畫出杯內的水面（透過杯口看到水位上升或側面透明微光）
+      if (state.waterLevel > 0.01) {
+        const waterY = CUP.bottomY - (CUP.bottomY - (CUP.topY + 14)) * state.waterLevel;
+        const t = (waterY - CUP.topY) / (CUP.bottomY - CUP.topY);
+        const halfW = ((CUP.topRightX - CUP.topLeftX) / 2) * (1 - t) + ((CUP.bottomRightX - CUP.bottomLeftX) / 2) * t;
+
+        // 紙杯本體內側背景
+        ctx.save();
+        cupBodyPath(ctx);
+        ctx.clip();
+
+        // 紙杯外紙質底色
+        const paperGrad = ctx.createLinearGradient(CUP.topLeftX, 0, CUP.topRightX, 0);
+        paperGrad.addColorStop(0, '#f1f5f9');
+        paperGrad.addColorStop(0.25, '#ffffff');
+        paperGrad.addColorStop(0.75, '#fffdf9');
+        paperGrad.addColorStop(1, '#e2e8f0');
+        ctx.fillStyle = paperGrad;
+        ctx.fillRect(0, 0, W, H);
+
+        // 淡淡的水位透視指示（讓同學知道溫水倒到哪裡了）
+        ctx.fillStyle = state.temp >= 33 ? 'rgba(251, 146, 60, 0.10)' : 'rgba(56, 189, 248, 0.11)';
+        ctx.fillRect(0, waterY, W, CUP.bottomY - waterY + 20);
+        ctx.strokeStyle = state.temp >= 33 ? 'rgba(249, 115, 22, 0.35)' : 'rgba(14, 165, 233, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, waterY);
+        ctx.lineTo(W, waterY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      } else {
+        // 空杯紙質底色
+        ctx.save();
+        cupBodyPath(ctx);
+        ctx.clip();
+        const paperGrad = ctx.createLinearGradient(CUP.topLeftX, 0, CUP.topRightX, 0);
+        paperGrad.addColorStop(0, '#f1f5f9');
+        paperGrad.addColorStop(0.25, '#ffffff');
+        paperGrad.addColorStop(0.75, '#fffdf9');
+        paperGrad.addColorStop(1, '#e2e8f0');
+        ctx.fillStyle = paperGrad;
+        ctx.fillRect(0, 0, W, H);
+        ctx.restore();
+      }
+
+      // 4. 合成溫感油墨圖層（依照水位高度與溫度，從底部漸進變色）
+      const heatRatio = getHeatRatio(state.temp);
+      const waterY = CUP.bottomY - (CUP.bottomY - CUP.topY) * state.waterLevel;
+
+      // 準備冷色與熱色的漸變遮罩
+      compColdCtx.setTransform(1, 0, 0, 1, 0, 0);
+      compColdCtx.clearRect(0, 0, W * SCALE, H * SCALE);
+      compColdCtx.drawImage(coldCanvas, 0, 0);
+
+      compWarmCtx.setTransform(1, 0, 0, 1, 0, 0);
+      compWarmCtx.clearRect(0, 0, W * SCALE, H * SCALE);
+      compWarmCtx.drawImage(warmCanvas, 0, 0);
+
+      if (heatRatio > 0 && state.waterLevel > 0.01) {
+        const yPx = waterY * SCALE;
+        const feather = 26 * SCALE;
+
+        // 溫水區域的熱感遮罩（上方為 0，水位線以下漸變為 heatRatio）
+        const warmMask = compWarmCtx.createLinearGradient(0, yPx - feather, 0, yPx + feather);
+        warmMask.addColorStop(0, 'rgba(0,0,0,0)');
+        warmMask.addColorStop(1, `rgba(0,0,0,${heatRatio})`);
+
+        compWarmCtx.globalCompositeOperation = 'destination-in';
+        compWarmCtx.fillStyle = warmMask;
+        compWarmCtx.fillRect(0, 0, W * SCALE, H * SCALE);
+        compWarmCtx.globalCompositeOperation = 'source-over';
+
+        // 冷色層則在溫水區域同步淡出
+        const coldOutMask = compColdCtx.createLinearGradient(0, yPx - feather, 0, yPx + feather);
+        coldOutMask.addColorStop(0, 'rgba(0,0,0,0)');
+        coldOutMask.addColorStop(1, `rgba(0,0,0,${heatRatio})`);
+
+        compColdCtx.globalCompositeOperation = 'destination-out';
+        compColdCtx.fillStyle = coldOutMask;
+        compColdCtx.fillRect(0, 0, W * SCALE, H * SCALE);
+        compColdCtx.globalCompositeOperation = 'source-over';
+
+        ctx.drawImage(compCold, 0, 0, W, H);
+        ctx.drawImage(compWarm, 0, 0, W, H);
+      } else {
+        ctx.drawImage(coldCanvas, 0, 0, W, H);
+      }
+
+      // 5. 紙杯外框線與立體高光
+      ctx.save();
+      cupBodyPath(ctx);
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // 左側柔和反光
+      ctx.clip();
+      ctx.fillStyle = 'rgba(255,255,255,0.28)';
+      ctx.beginPath();
+      ctx.moveTo(CUP.topLeftX + 20, CUP.topY);
+      ctx.lineTo(CUP.topLeftX + 44, CUP.topY);
+      ctx.lineTo(CUP.bottomLeftX + 34, CUP.bottomY + 10);
+      ctx.lineTo(CUP.bottomLeftX + 14, CUP.bottomY + 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // 6. 杯口捲邊與杯中水面
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(W / 2, CUP.topY, (CUP.topRightX - CUP.topLeftX) / 2, CUP.rimHeight, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fill();
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // 杯口內圈（顯示裡面的水）
+      ctx.beginPath();
+      ctx.ellipse(W / 2, CUP.topY + 1, (CUP.topRightX - CUP.topLeftX) / 2 - 7, CUP.rimHeight - 4, 0, 0, Math.PI * 2);
+      if (state.waterLevel > 0.7) {
+        ctx.fillStyle = state.temp >= 33 ? '#fed7aa' : '#bae6fd';
+      } else {
+        ctx.fillStyle = '#e2e8f0';
+      }
+      ctx.fill();
+      ctx.restore();
+
+      // 7. 倒水動畫（水壺與水柱）
+      if (state.isPouring) {
+        ctx.save();
+        const spoutX = W / 2 + 52;
+        const spoutY = 34;
+
+        // 水流柱
+        ctx.strokeStyle = state.waterType === 'warm' ? 'rgba(251, 146, 60, 0.78)' : 'rgba(56, 189, 248, 0.78)';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(spoutX, spoutY + 12);
+        ctx.quadraticCurveTo(W / 2 + 20, spoutY + 25, W / 2 + 6, CUP.topY + 2);
+        ctx.stroke();
+
+        // 簡易可愛水壺
+        ctx.translate(spoutX + 42, spoutY - 2);
+        ctx.rotate(-0.42);
+        ctx.fillStyle = state.waterType === 'warm' ? '#f97316' : '#0284c7';
+        ctx.beginPath();
+        ctx.roundRect(-24, -18, 46, 36, 10);
+        ctx.fill();
+        // 壺嘴
+        ctx.beginPath();
+        ctx.moveTo(-22, -6);
+        ctx.lineTo(-42, 4);
+        ctx.lineTo(-22, 10);
+        ctx.closePath();
+        ctx.fill();
+        // 壺把
+        ctx.strokeStyle = state.waterType === 'warm' ? '#c2410c' : '#0369a1';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(24, 0, 12, -Math.PI / 2, Math.PI / 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 8. 溫水熱氣
+      state.steamParticles.forEach((p) => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 9. 空杯提示文字
+      if (state.items.length === 0) {
+        ctx.fillStyle = 'rgba(100, 116, 139, 0.55)';
+        ctx.font = 'bold 15px "Noto Sans TC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('在紙杯上畫畫或蓋圖案！', W / 2, 222);
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      updateSimulation();
+      drawCupScene();
+      requestAnimationFrame(loop);
+    }
+
+    // 啟動模擬器
+    renderInkButtons();
+    updateModeButtons();
+    renderOffscreenLayers();
+    loop();
+  </script>
+</body>
+</html>
